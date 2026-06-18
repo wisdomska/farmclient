@@ -1,5 +1,7 @@
 # FarmClient
 
+**Live:** https://farmclient.vercel.app — auto-deployed from `main` via Vercel.
+
 A fairer market for every farmer — a marketplace prototype connecting Ghana's farmers with trusted
 buyers. Farmers list crops from any phone (smartphone app **or** a `*789#` USSD flow), buyers order
 and pay into escrow, and farmers are paid the same day. This repo is a faithful React + Tailwind
