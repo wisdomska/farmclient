@@ -11,7 +11,7 @@ import {
   keypadSub,
 } from './data'
 import type { DisplayListing, Listing } from './types'
-import { apiEnabled } from './api'
+import { api, apiEnabled } from './api'
 
 /**
  * Central derived-state hook — the React port of the prototype's
@@ -398,6 +398,9 @@ export function useFarm() {
     setRating: (n: number) => set({ rated: n }),
     closeRating: () => {
       set({ showRating: false })
+      if (apiEnabled && s.currentOrderId && s.rated > 0) {
+        api.rateOrder(s.currentOrderId, s.rated).catch(() => undefined)
+      }
       showToast('Thank you! Your rating was saved.')
     },
 

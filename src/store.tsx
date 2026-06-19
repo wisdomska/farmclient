@@ -38,6 +38,7 @@ const INITIAL: FarmState = {
   token: getToken(),
   currentUser: null,
   liveListings: null,
+  currentOrderId: null,
 }
 
 interface Store {
@@ -194,7 +195,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, paying: true }))
     try {
       const res = await api.createOrder({ listingId: selectedId, quantityKg: orderQty })
-      setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0 }))
+      setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0, currentOrderId: res.order.id }))
       go('tracking')
       const msg = res.payment.ok ? 'Approve the prompt on your phone' : 'Order placed'
       showToast(msg)

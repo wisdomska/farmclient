@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useFarm } from '../lib/derive'
+import { useStore } from '../store'
 import { TopBar } from '../components/shared'
 import { api, apiEnabled } from '../lib/api'
 import { chip, cropPhoto, fmtGHS } from '../lib/data'
@@ -39,6 +40,7 @@ function mapApiOrder(o: any, onClick: () => void) {
 
 export function Orders() {
   const f = useFarm()
+  const { set } = useStore()
   const [liveOngoing, setLiveOngoing] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
   const [livePast, setLivePast] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
 
@@ -47,6 +49,7 @@ export function Orders() {
     api.myOrders().then((res) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapRow = (o: any) => mapApiOrder(o, () => {
+        set({ selectedId: o.id, currentOrderId: o.id })
         f.go('tracking')
       })
       setLiveOngoing((res.ongoing as unknown[]).map(mapRow))
