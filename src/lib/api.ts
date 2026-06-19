@@ -74,6 +74,14 @@ export const api = {
     )
   },
 
+  googleAuth(idToken: string) {
+    return request<{ token: string; user: unknown; role: string; isNewUser: boolean }>(
+      'POST',
+      '/v1/auth/google',
+      { idToken },
+    )
+  },
+
   listings(params: Record<string, string> = {}) {
     const qs = new URLSearchParams(params).toString()
     return request<{ items: unknown[]; page: number; total: number }>(

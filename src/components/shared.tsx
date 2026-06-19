@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useFarm } from '../lib/derive'
+import { useT } from '../lib/i18n'
 import type { DisplayListing } from '../lib/types'
 import { Icon, Logo, MoonIcon, StarSolid, SunIcon } from './primitives'
 
@@ -9,6 +10,29 @@ export function PinIcon({ size = 13 }: { size?: number }) {
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
+  )
+}
+
+/** EN | TW language switch. */
+export function LanguageToggle() {
+  const { lang, setLang } = useFarm()
+  const pill = (l: 'en' | 'tw', label: string) => (
+    <button
+      onClick={() => setLang(l)}
+      aria-label={`Switch to ${label}`}
+      className={
+        'rounded-md px-2 py-1 text-[12px] transition-colors ' +
+        (lang === l ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2 hover:text-ink')
+      }
+    >
+      {label}
+    </button>
+  )
+  return (
+    <div className="flex flex-shrink-0 items-center rounded-lg border border-line p-[2px]">
+      {pill('en', 'EN')}
+      {pill('tw', 'TW')}
+    </div>
   )
 }
 
@@ -46,6 +70,7 @@ export function TopBar({
   right?: ReactNode
 }) {
   const f = useFarm()
+  const t = useT()
   const navItem = (label: string, key: 'dashboard' | 'marketplace' | 'orders', onClick: () => void) => (
     <span
       onClick={active === key ? undefined : onClick}
@@ -95,9 +120,9 @@ export function TopBar({
 
       {showNav && (
         <div className="flex flex-shrink-0 items-center gap-[22px] text-[14px]">
-          {navItem('Dashboard', 'dashboard', f.goDashboard)}
-          {navItem('Marketplace', 'marketplace', f.goMarketplace)}
-          {navItem('Orders', 'orders', f.goOrders)}
+          {navItem(t('topbar.dashboard'), 'dashboard', f.goDashboard)}
+          {navItem(t('topbar.marketplace'), 'marketplace', f.goMarketplace)}
+          {navItem(t('topbar.orders'), 'orders', f.goOrders)}
         </div>
       )}
 

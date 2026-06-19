@@ -2,6 +2,7 @@ import { useFarm } from '../lib/derive'
 import type { Screen } from '../lib/types'
 import { useStore } from '../store'
 import { SunIcon, MoonIcon } from './primitives'
+import { LanguageToggle } from './shared'
 
 const NAV_DEFS: [Screen, string][] = [
   ['landing', 'Landing'],
@@ -54,6 +55,7 @@ export function Toolbar() {
           )
         })}
       </div>
+      <LanguageToggle />
       <button
         onClick={toggleTheme}
         aria-label="Toggle light and dark mode"

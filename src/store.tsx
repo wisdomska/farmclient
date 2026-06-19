@@ -10,10 +10,20 @@ import {
 } from 'react'
 import { USSD_NODES } from './lib/data'
 import { api, apiEnabled, clearToken, getToken, mapApiListing, setToken } from './lib/api'
-import type { FarmState, Listing, Screen, Theme } from './lib/types'
+import { firebaseEnabled, signInWithGoogle } from './lib/firebase'
+import type { FarmState, Lang, Listing, Screen, Theme } from './lib/types'
+
+function getStoredLang(): Lang {
+  try {
+    const v = localStorage.getItem('fc_lang')
+    if (v === 'en' || v === 'tw') return v
+  } catch { /* noop */ }
+  return 'en'
+}
 
 const INITIAL: FarmState = {
   theme: 'dark',
+  lang: getStoredLang(),
   screen: 'landing',
   authMode: 'signin',
   selectedId: 'L1',
@@ -51,9 +61,11 @@ interface Store {
   ussdSend: (d: string) => void
   loginEmail: (email: string, password: string) => Promise<void>
   registerEmail: (email: string, password: string, fullName: string) => Promise<void>
+  loginGoogle: () => Promise<void>
   logout: () => void
   loadListings: (params?: Record<string, string>) => Promise<void>
   placeOrder: () => Promise<void>
+  setLang: (l: Lang) => void
 }
 
 const StoreContext = createContext<Store | null>(null)
@@ -163,11 +175,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [go, showToast])
 
+  const loginGoogle = useCallback(async () => {
+    if (firebaseEnabled) {
+      try {
+        const idToken = await signInWithGoogle()
+        const res = await api.googleAuth(idToken)
+        setToken(res.token)
+        setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
+        go('dashboard')
+        showToast('Welcome!')
+      } catch (err) {
+        showToast((err as Error).message)
+      }
+    } else {
+      // No Firebase configured — demo fallback
+      go('dashboard')
+    }
+  }, [go, showToast])
+
   const logout = useCallback(() => {
     clearToken()
     setState((s) => ({ ...s, token: null, currentUser: null, liveListings: null }))
     go('landing')
   }, [go])
+
+  const setLang = useCallback((l: Lang) => {
+    try {
+      localStorage.setItem('fc_lang', l)
+    } catch { /* noop */ }
+    setState((s) => ({ ...s, lang: l }))
+  }, [])
 
   const loadListings = useCallback(async (params?: Record<string, string>) => {
     if (!apiEnabled) return
@@ -206,8 +243,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [go, showToast])
 
   const value = useMemo<Store>(
-    () => ({ state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder }),
-    [state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder],
+    () => ({ state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang }),
+    [state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
