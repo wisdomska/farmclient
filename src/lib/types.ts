@@ -94,4 +94,5 @@ export interface FarmState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any
   liveListings: Listing[] | null
+  currentOrderId: string | null
 }

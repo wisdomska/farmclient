@@ -119,6 +119,10 @@ export const api = {
       pin !== undefined ? { pin } : {},
     )
   },
+
+  rateOrder(id: string, rating: number) {
+    return request<{ ok: boolean; order: unknown }>('PATCH', `/v1/orders/${id}/rate`, { rating })
+  },
 }
 
 // ── shape mapper ───────────────────────────────────────────────────────────
