@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useFarm } from '../lib/derive'
+import { useT } from '../lib/i18n'
 
 export function Auth() {
   const f = useFarm()
+  const t = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -79,7 +81,7 @@ export function Auth() {
                 f.authMode === 'signin' ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
               }`}
             >
-              Sign in
+              {t('auth.tab.signin')}
             </button>
             <button
               onClick={f.setSignUp}
@@ -87,7 +89,7 @@ export function Auth() {
                 f.authMode === 'signup' ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
               }`}
             >
-              Sign up
+              {t('auth.tab.signup')}
             </button>
           </div>
 
@@ -96,7 +98,7 @@ export function Auth() {
 
           {/* Google button */}
           <button
-            onClick={f.doSignIn}
+            onClick={() => void f.loginGoogle()}
             className="w-full flex items-center justify-center gap-[10px] bg-bg text-ink border border-line rounded-[8px] p-[13px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] transition-[border-color] duration-150 hover:border-ink3"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -105,20 +107,20 @@ export function Auth() {
               <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
               <path fill="#EA4335" d="M12 4.75c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.46 14.97.5 12 .5A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 4.75 12 4.75z" />
             </svg>
-            Continue with Google
+            {t('auth.google')}
           </button>
 
           {/* divider */}
           <div className="flex items-center gap-[14px] my-[22px]">
             <div className="flex-1 h-px bg-line" />
-            <span className="text-[12px] text-ink3">or</span>
+            <span className="text-[12px] text-ink3">{t('auth.or')}</span>
             <div className="flex-1 h-px bg-line" />
           </div>
 
           {/* Full name — sign up only */}
           {f.isSignUp && (
             <div className="mb-[16px]">
-              <label className="block text-[13px] text-ink2 mb-[7px]">Full name</label>
+              <label className="block text-[13px] text-ink2 mb-[7px]">{t('auth.field.fullname')}</label>
               <input
                 placeholder="Kwame Asante"
                 value={fullName}
@@ -130,7 +132,7 @@ export function Auth() {
 
           {/* Email */}
           <div className="mb-[16px]">
-            <label className="block text-[13px] text-ink2 mb-[7px]">Email</label>
+            <label className="block text-[13px] text-ink2 mb-[7px]">{t('auth.field.email')}</label>
             <input
               placeholder="you@goldenfork.gh"
               value={email}
@@ -141,7 +143,7 @@ export function Auth() {
 
           {/* Password */}
           <div className="mb-[22px]">
-            <label className="block text-[13px] text-ink2 mb-[7px]">Password</label>
+            <label className="block text-[13px] text-ink2 mb-[7px]">{t('auth.field.password')}</label>
             <input
               type="password"
               placeholder="••••••••"

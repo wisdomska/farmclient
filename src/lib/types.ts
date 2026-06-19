@@ -13,6 +13,7 @@ export type Screen =
 
 export type Theme = 'dark' | 'light'
 export type AuthMode = 'signin' | 'signup'
+export type Lang = 'en' | 'tw'
 export type MktView = 'grid' | 'list' | 'map'
 export type FarmerTab = 'home' | 'add' | 'listings' | 'prices' | 'wallet'
 export type AdminTab =
@@ -95,4 +96,5 @@ export interface FarmState {
   currentUser: any
   liveListings: Listing[] | null
   currentOrderId: string | null
+  lang: Lang
 }

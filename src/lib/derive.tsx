@@ -19,7 +19,7 @@ import { api, apiEnabled } from './api'
  * almost purely presentational.
  */
 export function useFarm() {
-  const { state: s, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder } = useStore()
+  const { state: s, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang } = useStore()
 
   const disp = (l: Listing): DisplayListing => {
     const ai = aiColors(l.ai)
@@ -282,10 +282,15 @@ export function useFarm() {
     apiEnabled,
     loginEmail,
     registerEmail,
+    loginGoogle,
     logout,
     loadListings,
     liveListings: s.liveListings,
     currentUser: s.currentUser,
+
+    // i18n
+    lang: s.lang,
+    setLang,
 
     // nav
     go,

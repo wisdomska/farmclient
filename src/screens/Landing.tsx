@@ -1,9 +1,11 @@
 import { useFarm } from '../lib/derive'
 import { Icon, Logo } from '../components/primitives'
-import { ThemeToggle } from '../components/shared'
+import { ThemeToggle, LanguageToggle } from '../components/shared'
+import { useT } from '../lib/i18n'
 
 export function Landing() {
   const f = useFarm()
+  const t = useT()
 
   return (
     <div>
@@ -21,25 +23,26 @@ export function Landing() {
             <span className="text-[19px] font-normal tracking-[-0.02em]">FarmClient</span>
           </div>
           <div className="flex items-center gap-[26px] text-[14px] text-ink2">
-            <span onClick={f.goMarketplace} className="cursor-pointer transition-colors duration-150 hover:text-ink">Marketplace</span>
-            <span onClick={f.navHow} className="cursor-pointer transition-colors duration-150 hover:text-ink">How it works</span>
-            <span onClick={f.navFarmers} className="cursor-pointer transition-colors duration-150 hover:text-ink">For farmers</span>
-            <span onClick={f.navStory} className="cursor-pointer transition-colors duration-150 hover:text-ink">Our story</span>
+            <span onClick={f.goMarketplace} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.marketplace')}</span>
+            <span onClick={f.navHow} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.howItWorks')}</span>
+            <span onClick={f.navFarmers} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.forFarmers')}</span>
+            <span onClick={f.navStory} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.ourStory')}</span>
           </div>
         </div>
         <div className="flex items-center gap-[12px]">
+          <LanguageToggle />
           <ThemeToggle />
           <button
             onClick={f.goAuth}
             className="bg-transparent border-none text-ink text-[14px] cursor-pointer px-[14px] py-[10px] font-[inherit] hover:text-primary transition-colors duration-150"
           >
-            Sign in
+            {t('nav.signIn')}
           </button>
           <button
             onClick={f.goMarketplace}
             className="bg-primary text-primary-ink border-none rounded-[8px] px-[18px] py-[11px] text-[14px] font-normal cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
           >
-            See the market
+            {t('nav.seeMarket')}
           </button>
         </div>
       </nav>
@@ -49,20 +52,20 @@ export function Landing() {
         <div>
           <div className="inline-flex items-center gap-[8px] px-[12px] py-[6px] border border-line rounded-[20px] text-[12px] tracking-[0.06em] uppercase text-ink2 mb-[28px]">
             <span className="w-[6px] h-[6px] rounded-full bg-primary" />
-            A fairer market for every farmer
+            {t('landing.eyebrow')}
           </div>
           <h1 className="text-[60px] leading-[1.06] tracking-[-0.03em] font-normal m-0 mb-[22px] text-ink">
-            Fair prices for farmers. Fresh food for buyers.
+            {t('landing.h1')}
           </h1>
           <p className="text-[18px] leading-[1.6] text-ink2 m-0 mb-[36px] max-w-[480px]">
-            FarmClient links Ghana's farmers with trusted buyers. Farmers sell their crops the easy way — even with a simple phone — and get paid the same day.
+            {t('landing.hero.para')}
           </p>
           <div className="flex gap-[14px] flex-wrap">
             <button
               onClick={f.goMarketplace}
               className="inline-flex items-center gap-[9px] bg-primary text-primary-ink border-none rounded-[8px] px-[24px] py-[15px] text-[15px] cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
             >
-              See what's for sale
+              {t('landing.hero.btn1')}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
               </svg>
@@ -74,7 +77,7 @@ export function Landing() {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
               </svg>
-              I'm a Farmer — Dial *789#
+              {t('landing.hero.btn2')}
             </button>
           </div>
           <p className="text-[13px] text-ink3 mt-[28px] mb-0 flex items-center gap-[8px]">
@@ -126,8 +129,8 @@ export function Landing() {
       {/* how it works */}
       <div id="fc-how" className="max-w-[1280px] mx-auto px-[32px] py-[56px]">
         <div className="mb-[32px]">
-          <div className="text-[12px] tracking-[0.08em] uppercase text-primary mb-[10px]">How it works</div>
-          <h2 className="text-[34px] tracking-[-0.02em] font-normal m-0 text-ink">Three simple steps.</h2>
+          <div className="text-[12px] tracking-[0.08em] uppercase text-primary mb-[10px]">{t('nav.howItWorks')}</div>
+          <h2 className="text-[34px] tracking-[-0.02em] font-normal m-0 text-ink">{t('how.heading')}</h2>
         </div>
         <div className="grid gap-[20px]" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
           {f.howItWorks.map((h) => (
