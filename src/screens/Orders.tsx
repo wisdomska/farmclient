@@ -1,8 +1,68 @@
+import { useEffect, useState } from 'react'
 import { useFarm } from '../lib/derive'
 import { TopBar } from '../components/shared'
+import { api, apiEnabled } from '../lib/api'
+import { chip, cropPhoto, fmtGHS } from '../lib/data'
+
+// Map API order status string to chip key
+function statusToChipKey(status: string): string {
+  switch (status) {
+    case 'pending_payment': return 'pending'
+    case 'confirmed': return 'confirmed'
+    case 'in_progress': return 'active'
+    case 'delivered': return 'delivered'
+    case 'completed': return 'delivered'
+    case 'disputed': return 'disputed'
+    default: return 'active'
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapApiOrder(o: any, onClick: () => void) {
+  const statusKey = statusToChipKey(o.status as string)
+  const c = chip(statusKey)
+  return {
+    id: (o.orderRef ?? o.id) as string,
+    crop: o.cropType as string,
+    photo: cropPhoto(o.cropType as string),
+    farmer: o.farmer?.fullName as string ?? '—',
+    district: o.farmer?.district as string ?? '—',
+    qtyStr: `${o.quantityKg} kg`,
+    date: typeof o.createdAt === 'string' ? o.createdAt.slice(0, 10) : '',
+    totalStr: fmtGHS(Number(o.totalPaid ?? 0)),
+    bg: c.bg,
+    fg: c.fg,
+    label: c.label,
+    onClick,
+  }
+}
 
 export function Orders() {
   const f = useFarm()
+  const [liveOngoing, setLiveOngoing] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
+  const [livePast, setLivePast] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
+
+  useEffect(() => {
+    if (!apiEnabled) return
+    api.myOrders().then((res) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapRow = (o: any) => mapApiOrder(o, () => {
+        f.go('tracking')
+      })
+      setLiveOngoing((res.ongoing as unknown[]).map(mapRow))
+      setLivePast((res.past as unknown[]).map(mapRow))
+    }).catch(() => {
+      setLiveOngoing(null)
+      setLivePast(null)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Prefer live data; fall back to mock
+  const ordersOngoing = liveOngoing ?? f.ordersOngoing
+  const ordersPast = livePast ?? f.ordersPast
+  const ordersOngoingCount = ordersOngoing.length
+
 
   return (
     <div>
@@ -18,11 +78,11 @@ export function Orders() {
         <div className="flex items-center gap-[10px] mb-[16px]">
           <h2 className="text-[17px] font-normal tracking-[-0.01em] m-0">On the way</h2>
           <span className="text-[12px] bg-primary-dim text-primary px-[10px] py-[3px] rounded-full">
-            {f.ordersOngoingCount}
+            {ordersOngoingCount}
           </span>
         </div>
         <div className="flex flex-col gap-[12px] mb-[40px]">
-          {f.ordersOngoing.map((o) => (
+          {ordersOngoing.map((o) => (
             <div
               key={o.id}
               onClick={o.onClick}
@@ -66,7 +126,7 @@ export function Orders() {
         {/* Past orders */}
         <h2 className="text-[17px] font-normal tracking-[-0.01em] mb-[16px]">Past orders</h2>
         <div className="flex flex-col gap-[12px]">
-          {f.ordersPast.map((o) => (
+          {ordersPast.map((o) => (
             <div
               key={o.id}
               onClick={o.onClick}

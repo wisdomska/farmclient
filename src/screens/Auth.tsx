@@ -1,7 +1,22 @@
+import { useState } from 'react'
 import { useFarm } from '../lib/derive'
 
 export function Auth() {
   const f = useFarm()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit() {
+    setLoading(true)
+    if (f.isSignUp) {
+      await f.registerEmail(email, password, fullName)
+    } else {
+      await f.loginEmail(email, password)
+    }
+    setLoading(false)
+  }
 
   return (
     <div className="grid grid-cols-2" style={{ minHeight: 'calc(100vh - 46px)' }}>
@@ -106,6 +121,8 @@ export function Auth() {
               <label className="block text-[13px] text-ink2 mb-[7px]">Full name</label>
               <input
                 placeholder="Kwame Asante"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
               />
             </div>
@@ -116,6 +133,8 @@ export function Auth() {
             <label className="block text-[13px] text-ink2 mb-[7px]">Email</label>
             <input
               placeholder="you@goldenfork.gh"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
             />
           </div>
@@ -126,16 +145,20 @@ export function Auth() {
             <input
               type="password"
               placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit() }}
               className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
             />
           </div>
 
           {/* primary CTA */}
           <button
-            onClick={f.doSignIn}
-            className="w-full bg-primary text-primary-ink border-none rounded-[8px] p-[14px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88]"
+            onClick={() => void handleSubmit()}
+            disabled={loading}
+            className="w-full bg-primary text-primary-ink border-none rounded-[8px] p-[14px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {f.authCta}
+            {loading ? 'Please wait…' : f.authCta}
           </button>
 
           {/* switch mode */}
