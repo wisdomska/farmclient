@@ -1,9 +1,17 @@
+import { useEffect } from 'react'
 import { useFarm } from '../lib/derive'
 import { TrendArrow } from '../components/primitives'
 import { TopBar, ListingCard } from '../components/shared'
 
 export function Dashboard() {
   const f = useFarm()
+
+  useEffect(() => {
+    if (f.apiEnabled && f.liveListings === null) {
+      void f.loadListings()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div>

@@ -1,9 +1,38 @@
+import { useEffect } from 'react'
 import { useFarm } from '../lib/derive'
+import { useStore } from '../store'
 import { StarIcon } from '../components/primitives'
 import { TopBar } from '../components/shared'
+import { api, apiEnabled } from '../lib/api'
+
+function statusToTrackStep(status: string): number {
+  switch (status) {
+    case 'pending_payment': return 0
+    case 'confirmed': return 1
+    case 'in_progress': return 2
+    case 'delivered': return 3
+    case 'completed': return 4
+    default: return 0
+  }
+}
 
 export function Tracking() {
   const f = useFarm()
+  const { set, state } = useStore()
+
+  useEffect(() => {
+    if (!apiEnabled) return
+    const id = state.selectedId
+    if (!id) return
+    api.order(id).then((raw) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const status = (raw as any)?.status as string | undefined
+      if (status) {
+        set({ trackStep: statusToTrackStep(status) })
+      }
+    }).catch(() => { /* ignore — keep current step */ })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.selectedId])
 
   return (
     <div>

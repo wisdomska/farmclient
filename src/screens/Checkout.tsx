@@ -112,8 +112,9 @@ export function Checkout() {
             </div>
 
             <button
-              onClick={f.startPay}
-              className="w-full bg-primary text-primary-ink border-none rounded-[8px] py-[15px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88]"
+              onClick={() => void f.placeOrder()}
+              disabled={f.paying}
+              className="w-full bg-primary text-primary-ink border-none rounded-[8px] py-[15px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Confirm &amp; Pay
             </button>

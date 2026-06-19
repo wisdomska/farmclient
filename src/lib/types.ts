@@ -90,4 +90,8 @@ export interface FarmState {
   mktMax: number
   ussdNode: string
   toast: string
+  token: string | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  currentUser: any
+  liveListings: Listing[] | null
 }

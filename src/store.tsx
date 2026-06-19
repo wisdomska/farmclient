@@ -9,7 +9,8 @@ import {
   type ReactNode,
 } from 'react'
 import { USSD_NODES } from './lib/data'
-import type { FarmState, Screen, Theme } from './lib/types'
+import { api, apiEnabled, clearToken, getToken, mapApiListing, setToken } from './lib/api'
+import type { FarmState, Listing, Screen, Theme } from './lib/types'
 
 const INITIAL: FarmState = {
   theme: 'dark',
@@ -34,6 +35,9 @@ const INITIAL: FarmState = {
   mktMax: 10,
   ussdNode: 'root',
   toast: '',
+  token: getToken(),
+  currentUser: null,
+  liveListings: null,
 }
 
 interface Store {
@@ -44,16 +48,26 @@ interface Store {
   showToast: (msg: string) => void
   scrollToId: (id: string) => void
   ussdSend: (d: string) => void
+  loginEmail: (email: string, password: string) => Promise<void>
+  registerEmail: (email: string, password: string, fullName: string) => Promise<void>
+  logout: () => void
+  loadListings: (params?: Record<string, string>) => Promise<void>
+  placeOrder: () => Promise<void>
 }
 
 const StoreContext = createContext<Store | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FarmState>(INITIAL)
+  const stateRef = useRef<FarmState>(INITIAL)
   const toastSeq = useRef(0)
 
   const set = useCallback((patch: Partial<FarmState>) => {
-    setState((s) => ({ ...s, ...patch }))
+    setState((s) => {
+      const next = { ...s, ...patch }
+      stateRef.current = next
+      return next
+    })
   }, [])
 
   const go = useCallback((screen: Screen) => {
@@ -116,9 +130,83 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loginEmail = useCallback(async (email: string, password: string) => {
+    if (!apiEnabled) {
+      go('dashboard')
+      return
+    }
+    try {
+      const res = await api.login(email, password)
+      setToken(res.token)
+      setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
+      go('dashboard')
+      showToast('Welcome back!')
+    } catch (err) {
+      showToast((err as Error).message)
+    }
+  }, [go, showToast])
+
+  const registerEmail = useCallback(async (email: string, password: string, fullName: string) => {
+    if (!apiEnabled) {
+      go('dashboard')
+      return
+    }
+    try {
+      const res = await api.register(email, password, fullName)
+      setToken(res.token)
+      setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
+      go('dashboard')
+      showToast('Welcome! Your account has been created.')
+    } catch (err) {
+      showToast((err as Error).message)
+    }
+  }, [go, showToast])
+
+  const logout = useCallback(() => {
+    clearToken()
+    setState((s) => ({ ...s, token: null, currentUser: null, liveListings: null }))
+    go('landing')
+  }, [go])
+
+  const loadListings = useCallback(async (params?: Record<string, string>) => {
+    if (!apiEnabled) return
+    try {
+      const res = await api.listings(params)
+      const mapped: Listing[] = res.items.map(mapApiListing)
+      setState((s) => ({ ...s, liveListings: mapped }))
+    } catch {
+      setState((s) => ({ ...s, liveListings: null }))
+    }
+  }, [])
+
+  const placeOrder = useCallback(async () => {
+    if (!apiEnabled) {
+      // demo flow — simulate payment
+      setState((s) => ({ ...s, paying: true }))
+      setTimeout(() => {
+        setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0 }))
+        go('tracking')
+      }, 2600)
+      return
+    }
+    // Capture selectedId and orderQty from the ref (kept current by set())
+    const { selectedId, orderQty } = stateRef.current
+    setState((s) => ({ ...s, paying: true }))
+    try {
+      const res = await api.createOrder({ listingId: selectedId, quantityKg: orderQty })
+      setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0 }))
+      go('tracking')
+      const msg = res.payment.ok ? 'Approve the prompt on your phone' : 'Order placed'
+      showToast(msg)
+    } catch (err) {
+      setState((s) => ({ ...s, paying: false }))
+      showToast((err as Error).message)
+    }
+  }, [go, showToast])
+
   const value = useMemo<Store>(
-    () => ({ state, set, go, toggleTheme, showToast, scrollToId, ussdSend }),
-    [state, set, go, toggleTheme, showToast, scrollToId, ussdSend],
+    () => ({ state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder }),
+    [state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

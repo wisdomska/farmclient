@@ -1,9 +1,17 @@
+import { useEffect } from 'react'
 import { useFarm } from '../lib/derive'
 import { Icon } from '../components/primitives'
 import { TopBar, ListingCard } from '../components/shared'
 
 export function Marketplace() {
   const f = useFarm()
+
+  useEffect(() => {
+    if (f.apiEnabled && f.liveListings === null) {
+      void f.loadListings()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const viewBtnBase = 'w-[36px] h-[36px] flex items-center justify-center rounded-lg border transition-colors duration-150'
   const activeBtn = `${viewBtnBase} bg-primary text-primary-ink border-primary`

@@ -11,6 +11,7 @@ import {
   keypadSub,
 } from './data'
 import type { DisplayListing, Listing } from './types'
+import { apiEnabled } from './api'
 
 /**
  * Central derived-state hook — the React port of the prototype's
@@ -18,7 +19,7 @@ import type { DisplayListing, Listing } from './types'
  * almost purely presentational.
  */
 export function useFarm() {
-  const { state: s, set, go, toggleTheme, showToast, scrollToId, ussdSend } = useStore()
+  const { state: s, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, logout, loadListings, placeOrder } = useStore()
 
   const disp = (l: Listing): DisplayListing => {
     const ai = aiColors(l.ai)
@@ -45,8 +46,10 @@ export function useFarm() {
     }
   }
 
-  const all = LISTINGS.map(disp)
-  const sel = LISTINGS.find((l) => l.id === s.selectedId) || LISTINGS[0]
+  // Use live API listings when available; fall back to mock data
+  const source: Listing[] = s.liveListings ?? LISTINGS
+  const all = source.map(disp)
+  const sel = source.find((l) => l.id === s.selectedId) || source[0] || disp(LISTINGS[0])
   const selD = disp(sel)
   const subtotal = sel.price * s.orderQty
   const fee = subtotal * 0.015
@@ -105,7 +108,7 @@ export function useFarm() {
   ]
 
   const mkOrder = (id: string, lid: string, qty: number, date: string, step: number, statusKey: string, labelOver?: string) => {
-    const l = LISTINGS.find((x) => x.id === lid)!
+    const l = (source.find((x) => x.id === lid) ?? LISTINGS.find((x) => x.id === lid))!
     const c = chip(statusKey)
     return {
       id,
@@ -275,6 +278,15 @@ export function useFarm() {
     isFarmer: s.screen === 'farmer',
     isAdmin: s.screen === 'admin',
 
+    // api
+    apiEnabled,
+    loginEmail,
+    registerEmail,
+    logout,
+    loadListings,
+    liveListings: s.liveListings,
+    currentUser: s.currentUser,
+
     // nav
     go,
     goAuth: () => go('auth'),
@@ -373,6 +385,7 @@ export function useFarm() {
         go('tracking')
       }, 2600)
     },
+    placeOrder,
 
     // tracking
     steps,
