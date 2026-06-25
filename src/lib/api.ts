@@ -94,7 +94,7 @@ export const api = {
     return request<unknown>('GET', `/v1/listings/${id}`)
   },
 
-  createOrder(body: { listingId: string; quantityKg: number; deliveryDate?: string; deliveryMethod?: string }) {
+  createOrder(body: { listingId: string; quantityKg: number; deliveryDate?: string; deliveryMethod?: string; payerPhone?: string }) {
     return request<{
       order: {
         id: string
