@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useFarm } from '../lib/derive'
 import { TopBar } from '../components/shared'
 
 export function Checkout() {
   const f = useFarm()
+  const [momo, setMomo] = useState('')
 
   return (
     <div>
@@ -49,7 +51,9 @@ export function Checkout() {
             <div className="mb-[20px]">
               <label className="block text-[13px] text-ink2 mb-[7px]">Mobile money number</label>
               <input
-                defaultValue="024 •• 1042"
+                value={momo}
+                onChange={(e) => setMomo(e.target.value)}
+                placeholder="024 123 4567"
                 className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
               />
             </div>
@@ -112,7 +116,7 @@ export function Checkout() {
             </div>
 
             <button
-              onClick={() => void f.placeOrder()}
+              onClick={() => void f.placeOrder(momo)}
               disabled={f.paying}
               className="w-full bg-primary text-primary-ink border-none rounded-[8px] py-[15px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88] disabled:opacity-60 disabled:cursor-not-allowed"
             >

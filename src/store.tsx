@@ -64,7 +64,7 @@ interface Store {
   loginGoogle: () => Promise<void>
   logout: () => void
   loadListings: (params?: Record<string, string>) => Promise<void>
-  placeOrder: () => Promise<void>
+  placeOrder: (payerPhone?: string) => Promise<void>
   setLang: (l: Lang) => void
 }
 
@@ -217,7 +217,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const placeOrder = useCallback(async () => {
+  const placeOrder = useCallback(async (payerPhone?: string) => {
     if (!apiEnabled) {
       // demo flow — simulate payment
       setState((s) => ({ ...s, paying: true }))
@@ -231,7 +231,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const { selectedId, orderQty } = stateRef.current
     setState((s) => ({ ...s, paying: true }))
     try {
-      const res = await api.createOrder({ listingId: selectedId, quantityKg: orderQty })
+      const res = await api.createOrder({ listingId: selectedId, quantityKg: orderQty, payerPhone })
       setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0, currentOrderId: res.order.id }))
       go('tracking')
       const msg = res.payment.ok ? 'Approve the prompt on your phone' : 'Order placed'
