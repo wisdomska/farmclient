@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
 import { useT } from '../lib/i18n'
@@ -20,6 +20,16 @@ export function Auth() {
     const redirect = searchParams.get('redirect')
     navigate(redirect || roleHome(role), { replace: true })
   }
+
+  // Already signed in? There's nothing to do here — go to the intended
+  // destination or this role's own shell.
+  useEffect(() => {
+    if (f.authStatus === 'authed' && f.role) {
+      const redirect = searchParams.get('redirect')
+      navigate(redirect || roleHome(f.role), { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.authStatus, f.role])
 
   async function handleSubmit() {
     setLoading(true)
@@ -49,8 +59,8 @@ export function Auth() {
           style={{ background: 'linear-gradient(180deg, rgba(8,20,18,0.74) 0%, rgba(8,20,18,0.82) 100%)' }}
         />
 
-        {/* logo */}
-        <div className="relative flex items-center gap-[10px]">
+        {/* logo — back to the landing page */}
+        <div onClick={() => navigate('/')} className="relative flex items-center gap-[10px] cursor-pointer">
           <div className="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 20h10" />

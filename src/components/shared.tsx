@@ -75,6 +75,7 @@ export function TopBar({
   const t = useT()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const authed = f.authStatus === 'authed'
   const initials = ((f.currentUser?.fullName as string | undefined) ?? 'Kwame Asante')
     .split(' ')
     .map((w) => w[0])
@@ -106,7 +107,7 @@ export function TopBar({
   )
   return (
     <div className="sticky top-[var(--toolbar-h)] z-50 flex h-16 items-center gap-5 border-b border-line bg-bg px-7">
-      <div onClick={f.goDashboard} className="flex flex-shrink-0 cursor-pointer items-center gap-[9px]">
+      <div onClick={authed ? f.goDashboard : f.goHome} className="flex flex-shrink-0 cursor-pointer items-center gap-[9px]">
         <Logo size={17} box={28} radius={7} />
         <span className="text-[17px] tracking-[-0.02em]">FarmClient</span>
       </div>
@@ -141,9 +142,9 @@ export function TopBar({
 
       {showNav && (
         <div className="flex flex-shrink-0 items-center gap-[22px] text-[14px]">
-          {navItem(t('topbar.dashboard'), 'dashboard', f.goDashboard)}
-          {navItem(t('topbar.marketplace'), 'marketplace', f.goMarketplace)}
-          {navItem(t('topbar.orders'), 'orders', f.goOrders)}
+          {authed && navItem(t('topbar.dashboard'), 'dashboard', f.goDashboard)}
+          {navItem(t('topbar.marketplace'), 'marketplace', authed ? f.goMarketplace : f.goPublicMarket)}
+          {authed && navItem(t('topbar.orders'), 'orders', f.goOrders)}
         </div>
       )}
 
@@ -159,7 +160,15 @@ export function TopBar({
 
       <ThemeToggle />
       {right}
-      {showAvatar && (
+      {showAvatar && !authed && (
+        <button
+          onClick={f.goAuth}
+          className="flex-shrink-0 bg-primary text-primary-ink border-none rounded-[8px] px-[16px] py-[9px] text-[13.5px] cursor-pointer font-[inherit] hover:opacity-[0.88] transition-opacity"
+        >
+          {t('nav.signIn')}
+        </button>
+      )}
+      {showAvatar && authed && (
         <div className="relative">
           <button
             onClick={() => setMenuOpen((o) => !o)}

@@ -304,7 +304,7 @@ export function useFarm() {
     searchToMarket: (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         set({ mktSearch: (e.target as HTMLInputElement).value })
-        navigate('/app/marketplace')
+        navigate(s.authStatus === 'authed' ? '/app/marketplace' : '/marketplace')
       }
     },
 
