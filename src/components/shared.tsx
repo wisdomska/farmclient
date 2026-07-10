@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
 import { useT } from '../lib/i18n'
 import type { DisplayListing } from '../lib/types'
 import { Icon, Logo, MoonIcon, StarSolid, SunIcon } from './primitives'
+import { FarmScore } from './FarmScore'
 
 export function PinIcon({ size = 13 }: { size?: number }) {
   return (
@@ -71,6 +73,25 @@ export function TopBar({
 }) {
   const f = useFarm()
   const t = useT()
+  const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const initials = ((f.currentUser?.fullName as string | undefined) ?? 'Kwame Asante')
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+  const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
+    <button
+      onClick={() => {
+        setMenuOpen(false)
+        onClick()
+      }}
+      className={`w-full text-left bg-transparent border-none px-[14px] py-[10px] text-[13.5px] cursor-pointer font-[inherit] hover:bg-surface2 ${danger ? 'text-error' : 'text-ink2 hover:text-ink'}`}
+    >
+      {label}
+    </button>
+  )
   const navItem = (label: string, key: 'dashboard' | 'marketplace' | 'orders', onClick: () => void) => (
     <span
       onClick={active === key ? undefined : onClick}
@@ -84,7 +105,7 @@ export function TopBar({
     </span>
   )
   return (
-    <div className="sticky top-[46px] z-50 flex h-16 items-center gap-5 border-b border-line bg-bg px-7">
+    <div className="sticky top-[var(--toolbar-h)] z-50 flex h-16 items-center gap-5 border-b border-line bg-bg px-7">
       <div onClick={f.goDashboard} className="flex flex-shrink-0 cursor-pointer items-center gap-[9px]">
         <Logo size={17} box={28} radius={7} />
         <span className="text-[17px] tracking-[-0.02em]">FarmClient</span>
@@ -139,8 +160,28 @@ export function TopBar({
       <ThemeToggle />
       {right}
       {showAvatar && (
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface2 text-[14px] text-ink2">
-          KA
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Account menu"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface2 text-[14px] text-ink2 cursor-pointer hover:border-ink3"
+          >
+            {initials}
+          </button>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-[60]" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-[46px] z-[70] w-[200px] bg-surface border border-line rounded-[8px] py-[6px] overflow-hidden">
+                {menuItem(t('menu.settings'), () => navigate('/app/settings'))}
+                {menuItem(t('menu.payments'), () => navigate('/app/settings/payment'))}
+                <div className="h-px bg-line my-[6px]" />
+                {menuItem(t('menu.signOut'), () => {
+                  f.logout()
+                  navigate('/')
+                }, true)}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -166,9 +207,12 @@ export function ListingCard({ l, showHarvest }: { l: DisplayListing; showHarvest
       <div className="p-[14px]">
         <div className="mb-1 flex items-center justify-between">
           <span className="text-[14px] text-ink">{l.farmer}</span>
-          <span className="inline-flex items-center gap-1 text-[12px] text-ink2">
-            <StarSolid />
-            {l.ratingStr}
+          <span className="inline-flex items-center gap-[8px]">
+            <span className="inline-flex items-center gap-1 text-[12px] text-ink2">
+              <StarSolid />
+              {l.ratingStr}
+            </span>
+            <FarmScore score={l.score} size={32} showLabel={false} />
           </span>
         </div>
         <div className="mb-3 text-[12px] text-ink2">

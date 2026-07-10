@@ -1,27 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
-import { useStore } from '../store'
 import { TopBar } from '../components/shared'
 import { api, apiEnabled } from '../lib/api'
-import { chip, cropPhoto, fmtGHS } from '../lib/data'
-
-// Map API order status string to chip key
-function statusToChipKey(status: string): string {
-  switch (status) {
-    case 'pending_payment': return 'pending'
-    case 'confirmed': return 'confirmed'
-    case 'in_progress': return 'active'
-    case 'delivered': return 'delivered'
-    case 'completed': return 'delivered'
-    case 'disputed': return 'disputed'
-    default: return 'active'
-  }
-}
+import { cropPhoto, fmtGHS } from '../lib/data'
+import { statusChip } from '../lib/orderStatus'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapApiOrder(o: any, onClick: () => void) {
-  const statusKey = statusToChipKey(o.status as string)
-  const c = chip(statusKey)
+  const c = statusChip(o.status as string)
   return {
     id: (o.orderRef ?? o.id) as string,
     crop: o.cropType as string,
@@ -40,7 +27,7 @@ function mapApiOrder(o: any, onClick: () => void) {
 
 export function Orders() {
   const f = useFarm()
-  const { set } = useStore()
+  const navigate = useNavigate()
   const [liveOngoing, setLiveOngoing] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
   const [livePast, setLivePast] = useState<ReturnType<typeof mapApiOrder>[] | null>(null)
 
@@ -48,10 +35,7 @@ export function Orders() {
     if (!apiEnabled) return
     api.myOrders().then((res) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapRow = (o: any) => mapApiOrder(o, () => {
-        set({ selectedId: o.id, currentOrderId: o.id })
-        f.go('tracking')
-      })
+      const mapRow = (o: any) => mapApiOrder(o, () => navigate(`/app/orders/${o.id}`))
       setLiveOngoing((res.ongoing as unknown[]).map(mapRow))
       setLivePast((res.past as unknown[]).map(mapRow))
     }).catch(() => {

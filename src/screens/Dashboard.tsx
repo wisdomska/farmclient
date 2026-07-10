@@ -142,7 +142,7 @@ export function Dashboard() {
               </div>
               <span className="text-[15px] text-ink">{o.totalStr}</span>
               <button
-                onClick={f.goTracking}
+                onClick={o.onClick}
                 className="bg-transparent border border-line rounded-[6px] px-[14px] py-2 text-[13px] text-ink cursor-pointer hover:border-primary hover:text-primary transition-colors"
               >
                 Track

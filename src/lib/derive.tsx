@@ -1,7 +1,10 @@
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../store'
 import {
   CROPS_ALL,
   LISTINGS,
+  MOCK_ONGOING_COUNT,
+  MOCK_ORDERS,
   USSD_NODES,
   aiColors,
   aiLabel,
@@ -10,16 +13,21 @@ import {
   fmtGHS,
   keypadSub,
 } from './data'
+import { statusChip } from './orderStatus'
+import { DEMO_FARMER_SCORE, farmScoreTier, farmScoreTierLabel } from './farmScore'
 import type { DisplayListing, Listing } from './types'
-import { api, apiEnabled } from './api'
+import { apiEnabled } from './api'
 
 /**
  * Central derived-state hook — the React port of the prototype's
  * renderVals() + screenVals() methods. Screens consume this and stay
- * almost purely presentational.
+ * almost purely presentational. Navigation is URL-driven via react-router.
  */
 export function useFarm() {
-  const { state: s, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang } = useStore()
+  const { state: s, set, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang } = useStore()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const params = useParams<{ listingId?: string }>()
 
   const disp = (l: Listing): DisplayListing => {
     const ai = aiColors(l.ai)
@@ -35,13 +43,12 @@ export function useFarm() {
       photo: cropPhoto(l.crop),
       initials: l.farmer.split(' ').map((w) => w[0]).join('').slice(0, 2),
       selectFn: () => {
-        set({ selectedId: l.id })
-        go('listing')
+        navigate(`/app/marketplace/${l.id}`)
       },
       orderFn: (e?: React.MouseEvent) => {
         if (e && e.stopPropagation) e.stopPropagation()
-        set({ selectedId: l.id, orderQty: 100 })
-        go('checkout')
+        set({ orderQty: 100 })
+        navigate(`/app/checkout/${l.id}`)
       },
     }
   }
@@ -49,7 +56,7 @@ export function useFarm() {
   // Use live API listings when available; fall back to mock data
   const source: Listing[] = s.liveListings ?? LISTINGS
   const all = source.map(disp)
-  const sel = source.find((l) => l.id === s.selectedId) || source[0] || disp(LISTINGS[0])
+  const sel = source.find((l) => l.id === params.listingId) || source[0] || LISTINGS[0]
   const selD = disp(sel)
   const subtotal = sel.price * s.orderQty
   const fee = subtotal * 0.015
@@ -70,14 +77,11 @@ export function useFarm() {
   }))
 
   // ── marketplace ──
-  const cropTabs = ['All', ...CROPS_ALL.slice().sort()].filter((v, i, a) => a.indexOf(v) === i)
-  // preserve original tab order
   const cropTabsOrdered = ['All', 'Maize', 'Yam', 'Cassava', 'Tomato', 'Plantain', 'Rice', 'Pepper', 'Onion'].map((c) => ({
     label: c,
     active: s.mktCrop === c,
     onClick: () => set({ mktCrop: c }),
   }))
-  void cropTabs
 
   const q = (s.mktSearch || '').trim().toLowerCase()
   let mktFiltered = all.filter((l) => {
@@ -101,46 +105,30 @@ export function useFarm() {
     onClick: () => set({ mktCrop: s.mktCrop === c ? 'All' : c }),
   }))
 
-  // ── dashboard active orders ──
-  const orders = [
-    { id: 'ORD-2041', crop: 'Tomato', farmer: 'Adwoa Owusu', qtyStr: '120 kg', totalStr: fmtGHS(780), ...chip('active') },
-    { id: 'ORD-2038', crop: 'Maize', farmer: 'Ibrahim Mohammed', qtyStr: '500 kg', totalStr: fmtGHS(900), ...chip('confirmed') },
-  ]
-
-  const mkOrder = (id: string, lid: string, qty: number, date: string, step: number, statusKey: string, labelOver?: string) => {
-    const l = (source.find((x) => x.id === lid) ?? LISTINGS.find((x) => x.id === lid))!
-    const c = chip(statusKey)
+  // ── orders (mock fallback) — presentation derives from lib/orderStatus ──
+  const mkOrder = (m: (typeof MOCK_ORDERS)[number]) => {
+    const l = (source.find((x) => x.id === m.lid) ?? LISTINGS.find((x) => x.id === m.lid))!
+    const c = statusChip(m.status)
     return {
-      id,
+      id: m.id,
       crop: l.crop,
       photo: cropPhoto(l.crop),
       farmer: l.farmer,
       district: l.district,
-      qtyStr: qty.toLocaleString('en-US') + ' kg',
-      date,
-      totalStr: fmtGHS(l.price * qty),
+      qtyStr: m.qty.toLocaleString('en-US') + ' kg',
+      date: m.date,
+      totalStr: fmtGHS(l.price * m.qty),
       bg: c.bg,
       fg: c.fg,
-      label: labelOver || c.label,
-      onClick: () => {
-        set({ selectedId: lid, orderQty: qty, trackStep: step, showRating: false })
-        go('tracking')
-      },
+      label: c.label,
+      onClick: () => navigate(`/app/orders/${m.id}`),
     }
   }
-  const ordersOngoing = [
-    mkOrder('ORD-2041', 'L2', 120, '16 Jun 2026', 2, 'active', 'In progress'),
-    mkOrder('ORD-2038', 'L3', 500, '15 Jun 2026', 1, 'confirmed', 'Farmer confirmed'),
-  ]
-  const ordersPast = [
-    mkOrder('ORD-2033', 'L1', 600, '09 Jun 2026', 4, 'delivered', 'Completed'),
-    mkOrder('ORD-2027', 'L4', 350, '01 Jun 2026', 4, 'delivered', 'Completed'),
-    mkOrder('ORD-1994', 'L6', 80, '24 May 2026', 4, 'disputed', 'Refunded'),
-  ]
+  const ordersOngoing = MOCK_ORDERS.slice(0, MOCK_ONGOING_COUNT).map(mkOrder)
+  const ordersPast = MOCK_ORDERS.slice(MOCK_ONGOING_COUNT).map(mkOrder)
 
-  // ── tracking ──
-  const stepNames = ['We got your payment', 'Farmer said yes', 'Getting your order ready', 'Delivered to you', 'All done']
-  const steps = stepNames.map((name, i) => ({ name, idx: i + 1, done: i < s.trackStep, current: i === s.trackStep, future: i > s.trackStep }))
+  // ── dashboard active orders (same mock source, same status derivation) ──
+  const orders = MOCK_ORDERS.slice(0, MOCK_ONGOING_COUNT).map(mkOrder)
 
   // ── payment methods ──
   const payDefs: [string, string, string][] = [
@@ -163,21 +151,11 @@ export function useFarm() {
     { crop: 'Plantain', qtyStr: '980 kg', priceStr: fmtGHS(3.4) + '/kg', photo: cropPhoto('Plantain'), ...chip('active'), label: 'Selling' },
     { crop: 'Cassava', qtyStr: '3,100 kg', priceStr: fmtGHS(1.1) + '/kg', photo: cropPhoto('Cassava'), ...chip('sold') },
   ]
-  const tabIcons: Record<string, string[]> = {
-    home: ['M3 9.5 12 3l9 6.5', 'M5 10v10h14V10'],
-    add: ['M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M12 8v8', 'M8 12h8'],
-    listings: ['M3 4h18', 'M3 10h18', 'M3 16h12'],
-    prices: ['M16 7h6v6', 'm22 7-8.5 8.5-5-5L2 17'],
-    wallet: ['M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16a1 1 0 0 1 1 1v3', 'M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4', 'M18 12a2 2 0 0 0 0 4h4v-4z'],
-  }
-  const farmerTabs = (['home', 'add', 'listings', 'prices', 'wallet'] as const).map((k) => ({
-    key: k,
-    label: k.charAt(0).toUpperCase() + k.slice(1),
-    active: s.farmerTab === k,
-    onClick: () => set({ farmerTab: k }),
-    iconPaths: tabIcons[k],
-  }))
   const addCrops = CROPS_ALL.map((c, i) => ({ crop: c, active: i === 1 }))
+
+  // ── farmer's own score (live when available, demo fallback) ──
+  const farmerScore = s.farmerScore ?? DEMO_FARMER_SCORE
+  const farmerScoreTierText = farmScoreTierLabel(farmScoreTier(farmerScore))
 
   // ── prices regional ──
   const priceRegions = [
@@ -214,25 +192,21 @@ export function useFarm() {
     { to: '+233 55 •• 3390', crop: 'Tomato', status: 'Pending', time: '11:03 am', ok: false },
     { to: '+233 26 •• 5567', crop: 'Plantain', status: 'Delivered', time: '11:03 am', ok: true },
   ]
-  const adminNav = (['overview', 'users', 'listings', 'orders', 'payments', 'sms', 'settings'] as const).map((k) => ({
-    key: k,
-    label: k === 'sms' ? 'SMS' : k.charAt(0).toUpperCase() + k.slice(1),
-    active: s.adminTab === k,
-    onClick: () => set({ adminTab: k }),
-  }))
-  const usersRows = [
-    { name: 'Ama Boateng', role: 'Farmer', loc: 'Techiman, Bono East', joined: '12 Mar 2026', ...chip('confirmed'), label: 'Verified' },
-    { name: 'Kwame Asante', role: 'Buyer', loc: 'Accra', joined: '04 Feb 2026', ...chip('confirmed'), label: 'Verified' },
-    { name: 'Ibrahim Mohammed', role: 'Farmer', loc: 'Tamale, Northern', joined: '21 Apr 2026', ...chip('confirmed'), label: 'Verified' },
-    { name: 'Yaw Mensah', role: 'Field agent', loc: 'Techiman, Bono East', joined: '09 Jan 2026', ...chip('active'), label: 'Active' },
-    { name: 'Adwoa Owusu', role: 'Farmer', loc: 'Kumasi, Ashanti', joined: '30 May 2026', ...chip('pending'), label: 'Pending' },
+  // Farmer rows carry their FarmScore (same values as their marketplace listings);
+  // buyers/agents have none.
+  const usersRows: { name: string; role: string; loc: string; joined: string; bg: string; fg: string; label: string; score: number | null }[] = [
+    { name: 'Ama Boateng', role: 'Farmer', loc: 'Techiman, Bono East', joined: '12 Mar 2026', ...chip('confirmed'), label: 'Verified', score: 812 },
+    { name: 'Kwame Asante', role: 'Buyer', loc: 'Accra', joined: '04 Feb 2026', ...chip('confirmed'), label: 'Verified', score: null },
+    { name: 'Ibrahim Mohammed', role: 'Farmer', loc: 'Tamale, Northern', joined: '21 Apr 2026', ...chip('confirmed'), label: 'Verified', score: 901 },
+    { name: 'Yaw Mensah', role: 'Field agent', loc: 'Techiman, Bono East', joined: '09 Jan 2026', ...chip('active'), label: 'Active', score: null },
+    { name: 'Adwoa Owusu', role: 'Farmer', loc: 'Kumasi, Ashanti', joined: '30 May 2026', ...chip('pending'), label: 'Pending', score: 735 },
   ]
   const ordersRows = [
-    { id: 'ORD-2041', crop: 'Tomato · 120 kg', who: 'Golden Fork', amt: fmtGHS(780), ...chip('active') },
-    { id: 'ORD-2038', crop: 'Maize · 500 kg', who: 'AccraFresh Ltd', amt: fmtGHS(900), ...chip('confirmed') },
-    { id: 'ORD-2033', crop: 'Yam · 600 kg', who: 'Golden Fork', amt: fmtGHS(2520), ...chip('delivered') },
-    { id: 'ORD-2027', crop: 'Plantain · 350 kg', who: 'Kwik Foods', amt: fmtGHS(1190), ...chip('sold') },
-    { id: 'ORD-1994', crop: 'Pepper · 80 kg', who: 'Golden Fork', amt: fmtGHS(640), ...chip('disputed') },
+    { id: 'ORD-2041', crop: 'Tomato · 120 kg', who: 'Golden Fork', amt: fmtGHS(780), ...statusChip('in_progress') },
+    { id: 'ORD-2038', crop: 'Maize · 500 kg', who: 'AccraFresh Ltd', amt: fmtGHS(900), ...statusChip('confirmed') },
+    { id: 'ORD-2033', crop: 'Yam · 600 kg', who: 'Golden Fork', amt: fmtGHS(2520), ...statusChip('completed') },
+    { id: 'ORD-2027', crop: 'Plantain · 350 kg', who: 'Kwik Foods', amt: fmtGHS(1190), ...statusChip('completed') },
+    { id: 'ORD-1994', crop: 'Pepper · 80 kg', who: 'Golden Fork', amt: fmtGHS(640), ...statusChip('disputed') },
   ]
   const paymentsRows = [
     { ref: 'PAY-7741', type: 'Payout to farmer', who: 'Ama Boateng', amt: '+ ' + fmtGHS(780), date: '14 Jun 2026', pos: true },
@@ -258,6 +232,8 @@ export function useFarm() {
     { title: 'About us', links: ['Our story', 'How it works', 'Privacy', 'Contact us'] },
   ]
 
+  const isSignUp = location.pathname === '/sign-up'
+
   return {
     s,
     theme: s.theme,
@@ -265,20 +241,7 @@ export function useFarm() {
     showToast,
     toast: s.toast,
 
-    // screen flags
-    isLanding: s.screen === 'landing',
-    isAuth: s.screen === 'auth',
-    isDashboard: s.screen === 'dashboard',
-    isMarketplace: s.screen === 'marketplace',
-    isListing: s.screen === 'listing',
-    isCheckout: s.screen === 'checkout',
-    isOrders: s.screen === 'orders',
-    isTracking: s.screen === 'tracking',
-    isUssd: s.screen === 'ussd',
-    isFarmer: s.screen === 'farmer',
-    isAdmin: s.screen === 'admin',
-
-    // api
+    // api / auth
     apiEnabled,
     loginEmail,
     registerEmail,
@@ -287,27 +250,28 @@ export function useFarm() {
     loadListings,
     liveListings: s.liveListings,
     currentUser: s.currentUser,
+    role: s.role,
+    authStatus: s.authStatus,
 
     // i18n
     lang: s.lang,
     setLang,
 
-    // nav
-    go,
-    goAuth: () => go('auth'),
-    goMarketplace: () => go('marketplace'),
-    goDashboard: () => go('dashboard'),
-    goUssd: () => go('ussd'),
-    goTracking: () => go('tracking'),
-    goListingBack: () => go('listing'),
-    goOrders: () => go('orders'),
+    // nav (URL-driven)
+    goAuth: () => navigate('/sign-in'),
+    goMarketplace: () => navigate('/app/marketplace'),
+    goPublicMarket: () => navigate('/marketplace'),
+    goDashboard: () => navigate('/app'),
+    goHome: () => navigate('/'),
+    goOrders: () => navigate('/app/orders'),
+    goOrder: (id: string) => navigate(`/app/orders/${id}`),
+    goListing: (id: string) => navigate(`/app/marketplace/${id}`),
+    goSettings: () => navigate('/app/settings'),
+    goPayments: () => navigate('/app/settings/payment'),
+    goUssd: () => scrollToId('fc-ussd'),
     navHow: () => scrollToId('fc-how'),
-    navFarmers: () => go('ussd'),
+    navFarmers: () => scrollToId('fc-ussd'),
     navStory: () => scrollToId('fc-story'),
-    doSignIn: () => {
-      go('dashboard')
-      showToast('Welcome back!')
-    },
 
     // landing
     heroStats,
@@ -316,16 +280,15 @@ export function useFarm() {
     recommended: all.slice(0, 4),
 
     // auth
-    authMode: s.authMode,
-    isSignUp: s.authMode === 'signup',
-    authTitle: s.authMode === 'signup' ? 'Create your account' : 'Welcome back',
-    authSub: s.authMode === 'signup' ? 'Start sourcing verified produce in minutes.' : 'Sign in to manage your orders and listings.',
-    authCta: s.authMode === 'signup' ? 'Create account' : 'Sign in',
-    authSwitchText: s.authMode === 'signup' ? 'Already have an account?' : 'New to FarmClient?',
-    authSwitchCta: s.authMode === 'signup' ? 'Sign in' : 'Create an account',
-    setSignIn: () => set({ authMode: 'signin' }),
-    setSignUp: () => set({ authMode: 'signup' }),
-    toggleAuthMode: () => set({ authMode: s.authMode === 'signup' ? 'signin' : 'signup' }),
+    isSignUp,
+    authTitle: isSignUp ? 'Create your account' : 'Welcome back',
+    authSub: isSignUp ? 'Start sourcing verified produce in minutes.' : 'Sign in to manage your orders and listings.',
+    authCta: isSignUp ? 'Create account' : 'Sign in',
+    authSwitchText: isSignUp ? 'Already have an account?' : 'New to FarmClient?',
+    authSwitchCta: isSignUp ? 'Sign in' : 'Create an account',
+    setSignIn: () => navigate('/sign-in', { replace: true }),
+    setSignUp: () => navigate('/sign-up', { replace: true }),
+    toggleAuthMode: () => navigate(isSignUp ? '/sign-in' : '/sign-up', { replace: true }),
 
     // dashboard / marketplace shared
     ticker,
@@ -341,7 +304,7 @@ export function useFarm() {
     searchToMarket: (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         set({ mktSearch: (e.target as HTMLInputElement).value })
-        go('marketplace')
+        navigate('/app/marketplace')
       }
     },
 
@@ -383,40 +346,12 @@ export function useFarm() {
     totalStr: fmtGHS(total),
     payMethods,
     paying: s.paying,
-    startPay: () => {
-      set({ paying: true })
-      setTimeout(() => {
-        set({ paying: false, paid: true, trackStep: 0 })
-        go('tracking')
-      }, 2600)
-    },
     placeOrder,
 
-    // tracking
-    steps,
-    trackStep: s.trackStep,
-    isDelivered: s.trackStep >= 3,
-    advanceStep: () => set({ trackStep: Math.min(4, s.trackStep + 1) }),
-    confirmReceipt: () => set({ trackStep: 4, showRating: true }),
-    showRating: s.showRating,
-    rated: s.rated,
-    setRating: (n: number) => set({ rated: n }),
-    closeRating: () => {
-      set({ showRating: false })
-      if (apiEnabled && s.currentOrderId && s.rated > 0) {
-        api.rateOrder(s.currentOrderId, s.rated).catch(() => undefined)
-      }
-      showToast('Thank you! Your rating was saved.')
-    },
+    // listings pool (Tracking looks up its order's listing here)
+    all,
 
     // farmer app
-    farmerTab: s.farmerTab,
-    farmerTabs,
-    isFarmerHome: s.farmerTab === 'home',
-    isFarmerAdd: s.farmerTab === 'add',
-    isFarmerListings: s.farmerTab === 'listings',
-    isFarmerPrices: s.farmerTab === 'prices',
-    isFarmerWallet: s.farmerTab === 'wallet',
     walletBalance: fmtGHS(12480),
     txns,
     myListings,
@@ -425,10 +360,12 @@ export function useFarm() {
     priceRegions,
     priceBig: fmtGHS(4.2),
     priceSeries,
-    goAddTab: () => set({ farmerTab: 'add' }),
-    goPricesTab: () => set({ farmerTab: 'prices' }),
+    farmerScore,
+    farmerScoreTierText,
+    goAddTab: () => navigate('/farmer/sell'),
+    goPricesTab: () => navigate('/farmer/prices'),
     goListingsTab: () => {
-      set({ farmerTab: 'listings' })
+      navigate('/farmer/listings')
       showToast('Done! Your crops are now for sale.')
     },
     withdrawMoney: () => showToast('Sent to your MoMo. Check your phone.'),
@@ -442,16 +379,7 @@ export function useFarm() {
     ussdKeys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((d) => ({ d, sub: keypadSub(d), onClick: () => ussdSend(d) })),
 
     // admin
-    adminTab: s.adminTab,
-    adminNav,
     kpis,
-    isAdminOverview: s.adminTab === 'overview',
-    isAdminSms: s.adminTab === 'sms',
-    isAdminUsers: s.adminTab === 'users',
-    isAdminListings: s.adminTab === 'listings',
-    isAdminOrders: s.adminTab === 'orders',
-    isAdminPayments: s.adminTab === 'payments',
-    isAdminSettings: s.adminTab === 'settings',
     revenue,
     topCrops,
     disputes,

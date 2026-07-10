@@ -57,6 +57,10 @@ export const STRINGS: Record<string, { en: string; tw: string }> = {
   'topbar.dashboard': { en: 'Dashboard', tw: 'Tebea' },
   'topbar.marketplace': { en: 'Marketplace', tw: 'Dwetiri' },
   'topbar.orders': { en: 'Orders', tw: 'Apafoɔ' },
+  // TopBar avatar menu
+  'menu.settings': { en: 'Settings', tw: 'Nhyehyɛe' },
+  'menu.payments': { en: 'Payment methods', tw: 'Akwan a wode tua ka' },
+  'menu.signOut': { en: 'Sign out', tw: 'Pue' },
   // Shared listing card buttons
   'card.quickOrder': { en: 'Quick order', tw: 'Mpɛn pɛ' },
   'card.placeOrder': { en: 'Place order', tw: 'De apa to ase' },

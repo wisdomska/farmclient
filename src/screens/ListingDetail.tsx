@@ -1,6 +1,7 @@
 import { useFarm } from '../lib/derive'
-import { TrendArrow, Ring, Spark } from '../components/primitives'
+import { TrendArrow, Spark } from '../components/primitives'
 import { TopBar } from '../components/shared'
+import { FarmScore } from '../components/FarmScore'
 
 export function ListingDetail() {
   const f = useFarm()
@@ -160,13 +161,7 @@ export function ListingDetail() {
               </div>
             </div>
             <div className="flex items-center gap-[18px] border-t border-line pt-[18px]">
-              <div className="relative w-[120px] h-[120px] flex-shrink-0">
-                <Ring score={f.sel.score} size={120} />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[24px] text-ink">{f.sel.score}</span>
-                  <span className="text-[10px] text-ink3 tracking-[0.04em]">TRUST SCORE</span>
-                </div>
-              </div>
+              <FarmScore score={f.sel.score} size={120} />
               <div className="text-[13px] text-ink2 leading-[1.6]">
                 The trust score shows how reliable this farmer is. A higher score means more buyers trust them — and it helps them get a small loan.
               </div>

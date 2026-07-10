@@ -9,9 +9,9 @@ import {
   type ReactNode,
 } from 'react'
 import { USSD_NODES } from './lib/data'
-import { api, apiEnabled, clearToken, getToken, mapApiListing, setToken } from './lib/api'
+import { api, apiEnabled, clearToken, decodeJwtClaim, getToken, mapApiListing, setToken } from './lib/api'
 import { firebaseEnabled, signInWithGoogle } from './lib/firebase'
-import type { FarmState, Lang, Listing, Screen, Theme } from './lib/types'
+import type { FarmState, Lang, Listing, Role, Theme } from './lib/types'
 
 function getStoredLang(): Lang {
   try {
@@ -24,18 +24,9 @@ function getStoredLang(): Lang {
 const INITIAL: FarmState = {
   theme: 'dark',
   lang: getStoredLang(),
-  screen: 'landing',
-  authMode: 'signin',
-  selectedId: 'L1',
   orderQty: 100,
   payMethod: 'mtn',
   paying: false,
-  paid: false,
-  trackStep: 0,
-  rated: 0,
-  showRating: false,
-  farmerTab: 'home',
-  adminTab: 'overview',
   mktView: 'grid',
   mktCrop: 'All',
   mktSearch: '',
@@ -48,23 +39,26 @@ const INITIAL: FarmState = {
   token: getToken(),
   currentUser: null,
   liveListings: null,
-  currentOrderId: null,
+  role: null,
+  authStatus: 'idle',
+  farmerScore: null,
 }
 
 interface Store {
   state: FarmState
   set: (patch: Partial<FarmState>) => void
-  go: (screen: Screen) => void
   toggleTheme: () => void
   showToast: (msg: string) => void
   scrollToId: (id: string) => void
   ussdSend: (d: string) => void
-  loginEmail: (email: string, password: string) => Promise<void>
-  registerEmail: (email: string, password: string, fullName: string) => Promise<void>
-  loginGoogle: () => Promise<void>
+  loginEmail: (email: string, password: string) => Promise<Role | null>
+  registerEmail: (email: string, password: string, fullName: string) => Promise<Role | null>
+  loginGoogle: () => Promise<Role | null>
   logout: () => void
+  /** Dev/QA-only: impersonate a role locally without a backend. Only reachable from debug-gated UI. */
+  devSetRole: (role: Role | null) => void
   loadListings: (params?: Record<string, string>) => Promise<void>
-  placeOrder: (payerPhone?: string) => Promise<void>
+  placeOrder: (listingId: string, payerPhone?: string) => Promise<{ orderId: string } | null>
   setLang: (l: Lang) => void
 }
 
@@ -81,15 +75,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stateRef.current = next
       return next
     })
-  }, [])
-
-  const go = useCallback((screen: Screen) => {
-    setState((s) => ({ ...s, screen }))
-    try {
-      window.scrollTo(0, 0)
-    } catch {
-      /* noop */
-    }
   }, [])
 
   const toggleTheme = useCallback(() => {
@@ -137,67 +122,114 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('fc_theme') as Theme | null
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (stored) setState((s) => ({ ...s, theme: stored }))
     } catch {
       /* noop */
     }
   }, [])
 
-  const loginEmail = useCallback(async (email: string, password: string) => {
-    if (!apiEnabled) {
-      go('dashboard')
+  // Boot-time session rehydration: a stored token only counts as a session
+  // once the server has re-verified it (POST /auth/refresh re-signs the JWT).
+  // The role is then read from the verified token — never from client input.
+  useEffect(() => {
+    const token = getToken()
+    if (!apiEnabled || !token) {
+      set({ authStatus: 'anon' })
       return
+    }
+    set({ authStatus: 'checking' })
+    api
+      .refresh()
+      .then((res) => {
+        setToken(res.token)
+        const role = decodeJwtClaim(res.token, 'role') as Role | null
+        if (role) {
+          set({ token: res.token, role, authStatus: 'authed' })
+        } else {
+          clearToken()
+          set({ token: null, role: null, authStatus: 'anon' })
+        }
+      })
+      .catch(() => {
+        clearToken()
+        set({ token: null, role: null, currentUser: null, authStatus: 'anon' })
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const loginEmail = useCallback(async (email: string, password: string): Promise<Role | null> => {
+    if (!apiEnabled) {
+      // Demo mode: no backend — sign in as the demo buyer.
+      set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: 'Kwame Asante' } })
+      showToast('Welcome back!')
+      return 'buyer'
     }
     try {
       const res = await api.login(email, password)
       setToken(res.token)
-      setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
-      go('dashboard')
+      const role = (res.role as Role) || 'buyer'
+      set({ token: res.token, currentUser: res.user, role, authStatus: 'authed' })
       showToast('Welcome back!')
+      return role
     } catch (err) {
       showToast((err as Error).message)
+      return null
     }
-  }, [go, showToast])
+  }, [set, showToast])
 
-  const registerEmail = useCallback(async (email: string, password: string, fullName: string) => {
+  const registerEmail = useCallback(async (email: string, password: string, fullName: string): Promise<Role | null> => {
     if (!apiEnabled) {
-      go('dashboard')
-      return
+      set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: fullName || 'Kwame Asante' } })
+      showToast('Welcome! Your account has been created.')
+      return 'buyer'
     }
     try {
       const res = await api.register(email, password, fullName)
       setToken(res.token)
-      setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
-      go('dashboard')
+      const role = (res.role as Role) || 'buyer'
+      set({ token: res.token, currentUser: res.user, role, authStatus: 'authed' })
       showToast('Welcome! Your account has been created.')
+      return role
     } catch (err) {
       showToast((err as Error).message)
+      return null
     }
-  }, [go, showToast])
+  }, [set, showToast])
 
-  const loginGoogle = useCallback(async () => {
+  const loginGoogle = useCallback(async (): Promise<Role | null> => {
     if (firebaseEnabled) {
       try {
         const idToken = await signInWithGoogle()
         const res = await api.googleAuth(idToken)
         setToken(res.token)
-        setState((s) => ({ ...s, token: res.token, currentUser: res.user }))
-        go('dashboard')
+        const role = (res.role as Role) || 'buyer'
+        set({ token: res.token, currentUser: res.user, role, authStatus: 'authed' })
         showToast('Welcome!')
+        return role
       } catch (err) {
         showToast((err as Error).message)
+        return null
       }
-    } else {
-      // No Firebase configured — demo fallback
-      go('dashboard')
     }
-  }, [go, showToast])
+    // No Firebase configured — demo fallback
+    set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: 'Kwame Asante' } })
+    return 'buyer'
+  }, [set, showToast])
 
   const logout = useCallback(() => {
     clearToken()
-    setState((s) => ({ ...s, token: null, currentUser: null, liveListings: null }))
-    go('landing')
-  }, [go])
+    set({ token: null, currentUser: null, liveListings: null, role: null, authStatus: 'anon', farmerScore: null })
+  }, [set])
+
+  const devSetRole = useCallback((role: Role | null) => {
+    if (role) {
+      set({ role, authStatus: 'authed', currentUser: { fullName: 'Demo ' + role } })
+    } else {
+      clearToken()
+      set({ token: null, currentUser: null, role: null, authStatus: 'anon', farmerScore: null })
+    }
+  }, [set])
 
   const setLang = useCallback((l: Lang) => {
     try {
@@ -217,34 +249,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const placeOrder = useCallback(async (payerPhone?: string) => {
+  const placeOrder = useCallback(async (listingId: string, payerPhone?: string): Promise<{ orderId: string } | null> => {
     if (!apiEnabled) {
       // demo flow — simulate payment
-      setState((s) => ({ ...s, paying: true }))
-      setTimeout(() => {
-        setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0 }))
-        go('tracking')
-      }, 2600)
-      return
+      set({ paying: true })
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          set({ paying: false })
+          resolve({ orderId: 'ORD-NEW' })
+        }, 2600)
+      })
     }
-    // Capture selectedId and orderQty from the ref (kept current by set())
-    const { selectedId, orderQty } = stateRef.current
-    setState((s) => ({ ...s, paying: true }))
+    const { orderQty } = stateRef.current
+    set({ paying: true })
     try {
-      const res = await api.createOrder({ listingId: selectedId, quantityKg: orderQty, payerPhone })
-      setState((s) => ({ ...s, paying: false, paid: true, trackStep: 0, currentOrderId: res.order.id }))
-      go('tracking')
+      const res = await api.createOrder({ listingId, quantityKg: orderQty, payerPhone })
+      set({ paying: false })
       const msg = res.payment.ok ? 'Approve the prompt on your phone' : 'Order placed'
       showToast(msg)
+      return { orderId: res.order.id }
     } catch (err) {
-      setState((s) => ({ ...s, paying: false }))
+      set({ paying: false })
       showToast((err as Error).message)
+      return null
     }
-  }, [go, showToast])
+  }, [set, showToast])
 
   const value = useMemo<Store>(
-    () => ({ state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang }),
-    [state, set, go, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, loadListings, placeOrder, setLang],
+    () => ({ state, set, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, devSetRole, loadListings, placeOrder, setLang }),
+    [state, set, toggleTheme, showToast, scrollToId, ussdSend, loginEmail, registerEmail, loginGoogle, logout, devSetRole, loadListings, placeOrder, setLang],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

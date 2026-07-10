@@ -4,7 +4,7 @@ export function Ussd() {
   const f = useFarm()
 
   return (
-    <div className="flex items-center justify-center gap-[48px] px-[32px] py-[32px] bg-surface" style={{ minHeight: 'calc(100vh - 46px)' }}>
+    <div className="flex items-center justify-center gap-[48px] px-[32px] py-[48px] bg-surface">
       {/* Left intro text column */}
       <div style={{ maxWidth: '300px' }}>
         <div className="text-[11px] tracking-[0.08em] uppercase text-ink3 mb-[8px]">

@@ -1,29 +1,11 @@
-export type Screen =
-  | 'landing'
-  | 'auth'
-  | 'dashboard'
-  | 'marketplace'
-  | 'listing'
-  | 'checkout'
-  | 'orders'
-  | 'tracking'
-  | 'ussd'
-  | 'farmer'
-  | 'admin'
-
 export type Theme = 'dark' | 'light'
-export type AuthMode = 'signin' | 'signup'
 export type Lang = 'en' | 'tw'
 export type MktView = 'grid' | 'list' | 'map'
-export type FarmerTab = 'home' | 'add' | 'listings' | 'prices' | 'wallet'
-export type AdminTab =
-  | 'overview'
-  | 'users'
-  | 'listings'
-  | 'orders'
-  | 'payments'
-  | 'sms'
-  | 'settings'
+
+/** Mirrors the backend's JWT role claim (farmclient-api src/types/roles.ts). */
+export type Role = 'farmer' | 'buyer' | 'agent' | 'admin' | 'superadmin'
+
+export type AuthStatus = 'idle' | 'checking' | 'authed' | 'anon'
 
 export type AiBand = 'fair' | 'low' | 'high'
 
@@ -70,18 +52,10 @@ export interface Chip {
 
 export interface FarmState {
   theme: Theme
-  screen: Screen
-  authMode: AuthMode
-  selectedId: string
+  lang: Lang
   orderQty: number
   payMethod: string
   paying: boolean
-  paid: boolean
-  trackStep: number
-  rated: number
-  showRating: boolean
-  farmerTab: FarmerTab
-  adminTab: AdminTab
   mktView: MktView
   mktCrop: string
   mktSearch: string
@@ -95,6 +69,7 @@ export interface FarmState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any
   liveListings: Listing[] | null
-  currentOrderId: string | null
-  lang: Lang
+  role: Role | null
+  authStatus: AuthStatus
+  farmerScore: number | null
 }

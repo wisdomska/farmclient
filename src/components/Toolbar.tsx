@@ -1,25 +1,33 @@
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
-import type { Screen } from '../lib/types'
 import { useStore } from '../store'
+import type { Role } from '../lib/types'
 import { SunIcon, MoonIcon } from './primitives'
 import { LanguageToggle } from './shared'
 
-const NAV_DEFS: [Screen, string][] = [
-  ['landing', 'Landing'],
-  ['auth', 'Sign in'],
-  ['dashboard', 'Dashboard'],
-  ['marketplace', 'Marketplace'],
-  ['listing', 'Listing'],
-  ['checkout', 'Checkout'],
-  ['orders', 'Orders'],
-  ['tracking', 'Tracking'],
-  ['ussd', 'USSD'],
-  ['farmer', 'Farmer App'],
-  ['admin', 'Admin'],
+/**
+ * Dev/QA-only prototype bar. Never rendered in production UI — gated by
+ * `debugMode` (import.meta.env.DEV or ?debug=1) at the App root.
+ * The role selector impersonates a role locally so all three shells can be
+ * demoed without a backend; the server still enforces real authorization.
+ */
+const NAV_DEFS: [string, string][] = [
+  ['/', 'Landing'],
+  ['/sign-in', 'Sign in'],
+  ['/app', 'Dashboard'],
+  ['/app/marketplace', 'Marketplace'],
+  ['/app/marketplace/L1', 'Listing'],
+  ['/app/checkout/L1', 'Checkout'],
+  ['/app/orders', 'Orders'],
+  ['/app/orders/ORD-2041', 'Tracking'],
+  ['/farmer', 'Farmer App'],
+  ['/admin', 'Admin'],
 ]
 
 export function Toolbar() {
-  const { state, go, toggleTheme } = useStore()
+  const { state, devSetRole, toggleTheme } = useStore()
+  const navigate = useNavigate()
+  const location = useLocation()
   const f = useFarm()
   return (
     <div className="sticky top-0 z-[90] flex h-[46px] items-center gap-4 border-b border-line bg-surface px-[14px]">
@@ -34,16 +42,16 @@ export function Toolbar() {
         </div>
         <span className="text-[12px] tracking-[-0.01em] text-ink">FarmClient</span>
         <span className="rounded-full border border-line px-[7px] py-[2px] text-[9px] uppercase tracking-[0.08em] text-ink3">
-          Prototype
+          Dev
         </span>
       </div>
       <div className="fcscroll flex flex-1 items-center gap-1 overflow-x-auto px-[2px]">
-        {NAV_DEFS.map(([key, label]) => {
-          const active = state.screen === key
+        {NAV_DEFS.map(([path, label]) => {
+          const active = location.pathname === path
           return (
             <button
-              key={key}
-              onClick={() => go(key)}
+              key={path}
+              onClick={() => navigate(path)}
               aria-label={label}
               className={
                 'flex-shrink-0 whitespace-nowrap rounded-[7px] border-none px-3 py-[6px] text-[12.5px] transition-all ' +
@@ -55,6 +63,19 @@ export function Toolbar() {
           )
         })}
       </div>
+      {/* Dev role switcher — the only way to demo farmer/admin shells without a backend */}
+      <select
+        value={state.role ?? ''}
+        onChange={(e) => devSetRole((e.target.value || null) as Role | null)}
+        aria-label="Dev role switcher"
+        className="flex-shrink-0 rounded-lg border border-line bg-surface px-[8px] py-[5px] text-[12px] text-ink2 outline-none cursor-pointer"
+      >
+        <option value="">Signed out</option>
+        <option value="buyer">Buyer</option>
+        <option value="farmer">Farmer</option>
+        <option value="admin">Admin</option>
+        <option value="superadmin">Super admin</option>
+      </select>
       <LanguageToggle />
       <button
         onClick={toggleTheme}

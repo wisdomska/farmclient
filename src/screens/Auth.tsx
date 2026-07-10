@@ -1,27 +1,42 @@
 import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
 import { useT } from '../lib/i18n'
+import { roleHome } from '../components/RequireRole'
+import type { Role } from '../lib/types'
 
 export function Auth() {
   const f = useFarm()
   const t = useT()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function afterAuth(role: Role | null) {
+    if (!role) return
+    const redirect = searchParams.get('redirect')
+    navigate(redirect || roleHome(role), { replace: true })
+  }
+
   async function handleSubmit() {
     setLoading(true)
-    if (f.isSignUp) {
-      await f.registerEmail(email, password, fullName)
-    } else {
-      await f.loginEmail(email, password)
-    }
+    const role = f.isSignUp
+      ? await f.registerEmail(email, password, fullName)
+      : await f.loginEmail(email, password)
     setLoading(false)
+    afterAuth(role)
+  }
+
+  async function handleGoogle() {
+    const role = await f.loginGoogle()
+    afterAuth(role)
   }
 
   return (
-    <div className="grid grid-cols-2" style={{ minHeight: 'calc(100vh - 46px)' }}>
+    <div className="grid grid-cols-2" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
       {/* brand panel */}
       <div className="relative overflow-hidden border-r border-line p-[56px] flex flex-col justify-between text-white">
         <img
@@ -78,7 +93,7 @@ export function Auth() {
             <button
               onClick={f.setSignIn}
               className={`rounded-[6px] px-[16px] py-[7px] text-[14px] cursor-pointer border-none font-[inherit] transition-colors duration-150 ${
-                f.authMode === 'signin' ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
+                !f.isSignUp ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
               }`}
             >
               {t('auth.tab.signin')}
@@ -86,7 +101,7 @@ export function Auth() {
             <button
               onClick={f.setSignUp}
               className={`rounded-[6px] px-[16px] py-[7px] text-[14px] cursor-pointer border-none font-[inherit] transition-colors duration-150 ${
-                f.authMode === 'signup' ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
+                f.isSignUp ? 'bg-primary text-primary-ink' : 'bg-transparent text-ink2'
               }`}
             >
               {t('auth.tab.signup')}
@@ -98,7 +113,7 @@ export function Auth() {
 
           {/* Google button */}
           <button
-            onClick={() => void f.loginGoogle()}
+            onClick={() => void handleGoogle()}
             className="w-full flex items-center justify-center gap-[10px] bg-bg text-ink border border-line rounded-[8px] p-[13px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] transition-[border-color] duration-150 hover:border-ink3"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">

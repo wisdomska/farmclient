@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useFarm } from '../lib/derive'
 import { Icon } from '../components/primitives'
 import { TopBar, ListingCard } from '../components/shared'
+import { FarmScore } from '../components/FarmScore'
 
 export function Marketplace() {
   const f = useFarm()
@@ -23,7 +24,7 @@ export function Marketplace() {
 
       <div className="grid max-w-[1440px] mx-auto" style={{ gridTemplateColumns: '260px 1fr' }}>
         {/* Filter sidebar */}
-        <aside className="border-r border-line px-[24px] py-[28px] min-h-[calc(100vh-110px)]">
+        <aside className="border-r border-line px-[24px] py-[28px] min-h-[calc(100vh-var(--toolbar-h)-64px)]">
           <div className="flex items-center justify-between mb-[24px]">
             <span className="text-[15px] text-ink">Filters</span>
             <span
@@ -321,6 +322,9 @@ export function Marketplace() {
                       {l.distStr} · {l.qtyStr} available
                     </div>
                   </div>
+
+                  {/* Trust score */}
+                  <FarmScore score={l.score} size={40} showLabel={false} />
 
                   {/* Price */}
                   <div className="text-right">

@@ -1,7 +1,8 @@
 import { useFarm } from '../lib/derive'
-import { Icon, Logo } from '../components/primitives'
+import { Icon } from '../components/primitives'
 import { ThemeToggle, LanguageToggle } from '../components/shared'
 import { useT } from '../lib/i18n'
+import { Ussd } from './Ussd'
 
 export function Landing() {
   const f = useFarm()
@@ -10,7 +11,7 @@ export function Landing() {
   return (
     <div>
       {/* marketing nav */}
-      <nav className="flex items-center justify-between max-w-[1280px] mx-auto px-[32px] py-[18px] sticky top-[46px] z-50 bg-bg">
+      <nav className="flex items-center justify-between max-w-[1280px] mx-auto px-[32px] py-[18px] sticky top-[var(--toolbar-h)] z-50 bg-bg">
         <div className="flex items-center gap-[38px]">
           <div className="flex items-center gap-[10px]">
             <div className="w-[30px] h-[30px] rounded-[8px] bg-primary flex items-center justify-center">
@@ -23,7 +24,7 @@ export function Landing() {
             <span className="text-[19px] font-normal tracking-[-0.02em]">FarmClient</span>
           </div>
           <div className="flex items-center gap-[26px] text-[14px] text-ink2">
-            <span onClick={f.goMarketplace} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.marketplace')}</span>
+            <span onClick={f.goPublicMarket} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.marketplace')}</span>
             <span onClick={f.navHow} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.howItWorks')}</span>
             <span onClick={f.navFarmers} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.forFarmers')}</span>
             <span onClick={f.navStory} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.ourStory')}</span>
@@ -39,7 +40,7 @@ export function Landing() {
             {t('nav.signIn')}
           </button>
           <button
-            onClick={f.goMarketplace}
+            onClick={f.goPublicMarket}
             className="bg-primary text-primary-ink border-none rounded-[8px] px-[18px] py-[11px] text-[14px] font-normal cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
           >
             {t('nav.seeMarket')}
@@ -62,7 +63,7 @@ export function Landing() {
           </p>
           <div className="flex gap-[14px] flex-wrap">
             <button
-              onClick={f.goMarketplace}
+              onClick={f.goPublicMarket}
               className="inline-flex items-center gap-[9px] bg-primary text-primary-ink border-none rounded-[8px] px-[24px] py-[15px] text-[15px] cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
             >
               {t('landing.hero.btn1')}
@@ -145,6 +146,19 @@ export function Landing() {
               <p className="text-[14px] leading-[1.6] text-ink2 m-0">{h.desc}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* USSD demo — how farmers without a smartphone use FarmClient */}
+      <div id="fc-ussd" className="max-w-[1280px] mx-auto px-[32px] py-[56px]">
+        <div className="mb-[32px]">
+          <div className="text-[12px] tracking-[0.08em] uppercase text-primary mb-[10px]">{t('nav.forFarmers')}</div>
+          <h2 className="text-[34px] tracking-[-0.02em] font-normal m-0 text-ink">
+            See how farmers without a smartphone use FarmClient
+          </h2>
+        </div>
+        <div className="border border-line rounded-[16px] overflow-hidden">
+          <Ussd />
         </div>
       </div>
 

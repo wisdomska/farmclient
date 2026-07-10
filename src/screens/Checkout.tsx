@@ -1,17 +1,33 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
 import { TopBar } from '../components/shared'
 
 export function Checkout() {
   const f = useFarm()
+  const navigate = useNavigate()
   const [momo, setMomo] = useState('')
+
+  async function confirmAndPay() {
+    const res = await f.placeOrder(f.sel.id, momo)
+    if (res) {
+      navigate(`/app/orders/${res.orderId}`, {
+        state: {
+          listingId: f.sel.id,
+          qty: f.orderQty,
+          status: 'pending_payment',
+          placed: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        },
+      })
+    }
+  }
 
   return (
     <div>
       <TopBar
         showNav={false}
         showAvatar={false}
-        back={{ label: 'Back', onClick: f.goListingBack }}
+        back={{ label: 'Back', onClick: () => f.goListing(f.sel.id) }}
         right={<span className="text-[13px] text-ink3">Step 2 of 3 · Payment</span>}
       />
 
@@ -116,7 +132,7 @@ export function Checkout() {
             </div>
 
             <button
-              onClick={() => void f.placeOrder(momo)}
+              onClick={() => void confirmAndPay()}
               disabled={f.paying}
               className="w-full bg-primary text-primary-ink border-none rounded-[8px] py-[15px] text-[15px] cursor-pointer font-[inherit] min-h-[44px] transition-opacity duration-150 hover:opacity-[0.88] disabled:opacity-60 disabled:cursor-not-allowed"
             >

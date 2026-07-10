@@ -30,6 +30,22 @@ export function clearToken(): void {
   }
 }
 
+/**
+ * Read a claim from a JWT payload WITHOUT verifying the signature.
+ * Client-side only, for UI routing/gating — the server independently
+ * verifies the same token on every API call (requireAuth/requireRole).
+ */
+export function decodeJwtClaim(token: string, key: string): string | null {
+  try {
+    const seg = token.split('.')[1]
+    const payload = JSON.parse(atob(seg.replace(/-/g, '+').replace(/_/g, '/')))
+    const v = payload?.[key]
+    return typeof v === 'string' ? v : null
+  } catch {
+    return null
+  }
+}
+
 // ── generic fetch client ───────────────────────────────────────────────────
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -130,6 +146,24 @@ export const api = {
 
   rateOrder(id: string, rating: number) {
     return request<{ ok: boolean; order: unknown }>('PATCH', `/v1/orders/${id}/rate`, { rating })
+  },
+
+  /** Re-verify the stored JWT and get a fresh one (boot-time session rehydration). */
+  refresh() {
+    return request<{ token: string }>('POST', '/v1/auth/refresh')
+  },
+
+  /** The authenticated farmer's own live FarmScore breakdown. */
+  farmerScore(id: string) {
+    return request<{
+      score: number
+      completedOrders: number
+      onTimeRate: number
+      avgRating: number
+      listingAccuracy: number
+      monthsActive: number
+      totalRevenue: number
+    }>('GET', `/v1/farmers/${id}/score`)
   },
 }
 

@@ -1,4 +1,5 @@
 import type { AiBand, Chip, Listing } from './types'
+import type { OrderStatus } from './orderStatus'
 
 export const LISTINGS: Listing[] = [
   { id: 'L1', crop: 'Yam', farmer: 'Ama Boateng', region: 'Bono East', district: 'Techiman', distanceKm: 12, price: 4.2, qty: 1800, harvest: '15 Jul 2026', rating: 4.8, reviews: 64, score: 812, verified: true, ai: 'fair', trend: +3.2, storage: 'Dry barn, ventilated', delivery: 'Pickup or agent drop-off' },
@@ -10,6 +11,29 @@ export const LISTINGS: Listing[] = [
   { id: 'L7', crop: 'Onion', farmer: 'Abena Asante', region: 'Upper East', district: 'Bolgatanga', distanceKm: 72, price: 4.8, qty: 1500, harvest: '22 Jul 2026', rating: 4.6, reviews: 47, score: 744, verified: true, ai: 'fair', trend: -0.9, storage: 'Dry store, netted', delivery: 'Bulk transport' },
   { id: 'L8', crop: 'Rice', farmer: 'Kwaku Boahen', region: 'Volta', district: 'Ho', distanceKm: 61, price: 5.2, qty: 2400, harvest: '30 Jun 2026', rating: 4.8, reviews: 88, score: 856, verified: true, ai: 'fair', trend: +1.3, storage: 'Milled, bagged', delivery: 'Bulk transport' },
 ]
+
+/**
+ * Demo orders used when the live API is unavailable. Status is a canonical
+ * OrderStatus — all presentation (chip, track step, label) derives from
+ * lib/orderStatus.ts. The first two are "on the way", the rest are past.
+ */
+export interface MockOrder {
+  id: string
+  lid: string
+  qty: number
+  date: string
+  status: OrderStatus
+}
+
+export const MOCK_ORDERS: MockOrder[] = [
+  { id: 'ORD-2041', lid: 'L2', qty: 120, date: '16 Jun 2026', status: 'in_progress' },
+  { id: 'ORD-2038', lid: 'L3', qty: 500, date: '15 Jun 2026', status: 'confirmed' },
+  { id: 'ORD-2033', lid: 'L1', qty: 600, date: '09 Jun 2026', status: 'completed' },
+  { id: 'ORD-2027', lid: 'L4', qty: 350, date: '01 Jun 2026', status: 'completed' },
+  { id: 'ORD-1994', lid: 'L6', qty: 80, date: '24 May 2026', status: 'disputed' },
+]
+
+export const MOCK_ONGOING_COUNT = 2
 
 export function fmtGHS(n: number): string {
   return 'GHS ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -78,7 +102,7 @@ export const USSD_NODES: Record<string, UssdNode> = {
   done: { title: 'All done', body: 'Done! Your Yam is now\nfor sale.\nYour number: FV-00841\n\nBuyers near you will get\na text message.\nDial *789# any time.', opts: {} },
   prices: { title: 'Today’s prices', body: 'For 1 kg today:\n\nYam       GHS 4.20  up\nMaize     GHS 1.80  same\nTomato    GHS 6.50  down\nCassava   GHS 1.10  up\n\n0. Go back', opts: { '0': 'root' } },
   wallet: { title: 'My money', body: 'You have: GHS 12,480.00\nLast payment: GHS 780.00\n  Order 2041 · 14 Jun 2026\n\n0. Go back', opts: { '0': 'root' } },
-  loan: { title: 'Get a loan', body: 'Trust score: 812\nYou can borrow money.\n\nYou can get up to\nGHS 3,000.00\n\n1. Get loan now\n0. Go back', opts: { '1': 'done', '0': 'root' } },
+  loan: { title: 'Get a loan', body: 'Trust score: 795\nYou can borrow money.\n\nYou can get up to\nGHS 3,000.00\n\n1. Get loan now\n0. Go back', opts: { '1': 'done', '0': 'root' } },
 }
 
 export function keypadSub(d: string): string {

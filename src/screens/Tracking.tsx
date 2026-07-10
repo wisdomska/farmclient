@@ -1,58 +1,118 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
-import { useStore } from '../store'
 import { StarIcon } from '../components/primitives'
 import { TopBar } from '../components/shared'
 import { api, apiEnabled } from '../lib/api'
+import { MOCK_ORDERS, fmtGHS } from '../lib/data'
+import { ORDERED_STEP_LABELS, nextStatus, orderStatusInfo, type OrderStatus } from '../lib/orderStatus'
 
-function statusToTrackStep(status: string): number {
-  switch (status) {
-    case 'pending_payment': return 0
-    case 'confirmed': return 1
-    case 'in_progress': return 2
-    case 'delivered': return 3
-    case 'completed': return 4
-    default: return 0
-  }
+interface LiveOrder {
+  crop: string
+  farmer: string
+  district: string
+  region: string
+  qty: number
+  totalStr: string
+  placed: string
+}
+
+/** State passed by Checkout right after a demo order is placed. */
+interface NewOrderState {
+  listingId?: string
+  qty?: number
+  status?: OrderStatus
+  placed?: string
 }
 
 export function Tracking() {
   const f = useFarm()
-  const { set, state } = useStore()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { orderId } = useParams<{ orderId: string }>()
+
+  const newOrder = (location.state ?? null) as NewOrderState | null
+  const mock = MOCK_ORDERS.find((m) => m.id === orderId)
+
+  // The one status for this order — every element below (chip semantics,
+  // stepper, actions) derives from it via lib/orderStatus.
+  const [status, setStatus] = useState<OrderStatus>(newOrder?.status ?? mock?.status ?? 'pending_payment')
+  const [live, setLive] = useState<LiveOrder | null>(null)
+  const [showRating, setShowRating] = useState(false)
+  const [rated, setRated] = useState(0)
 
   useEffect(() => {
-    if (!apiEnabled) return
-    const id = state.selectedId
-    if (!id) return
-    api.order(id).then((raw) => {
+    if (!apiEnabled || !orderId) return
+    api.order(orderId).then((raw) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const status = (raw as any)?.status as string | undefined
-      if (status) {
-        set({ trackStep: statusToTrackStep(status) })
+      const o = raw as any
+      if (o?.status) setStatus(o.status as OrderStatus)
+      if (o?.cropType) {
+        setLive({
+          crop: o.cropType as string,
+          farmer: (o.farmer?.fullName as string) ?? '—',
+          district: (o.farmer?.district as string) ?? '—',
+          region: (o.farmer?.region as string) ?? '',
+          qty: Number(o.quantityKg ?? 0),
+          totalStr: fmtGHS(Number(o.totalPaid ?? 0)),
+          placed: typeof o.createdAt === 'string' ? o.createdAt.slice(0, 10) : '',
+        })
       }
-    }).catch(() => { /* ignore — keep current step */ })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.selectedId])
+    }).catch(() => { /* keep mock/demo fields */ })
+  }, [orderId])
+
+  // Demo/mock display fields when no live order is available
+  const lid = newOrder?.listingId ?? mock?.lid ?? 'L1'
+  const listing = f.all.find((l) => l.id === lid) ?? f.all[0]
+  const qty = live?.qty ?? newOrder?.qty ?? mock?.qty ?? 100
+  const crop = live?.crop ?? listing.crop
+  const farmer = live?.farmer ?? listing.farmer
+  const district = live?.district ?? listing.district
+  const region = live?.region ?? listing.region
+  const totalStr = live?.totalStr ?? fmtGHS(listing.price * qty)
+  const placed = live?.placed ?? newOrder?.placed ?? mock?.date ?? ''
+
+  const info = orderStatusInfo(status)
+  const steps = ORDERED_STEP_LABELS.map((name, i) => ({
+    name,
+    idx: i + 1,
+    done: i < info.trackStep,
+    current: i === info.trackStep,
+    future: i > info.trackStep,
+  }))
+  const isDelivered = info.trackStep >= 3
+
+  const confirmReceipt = () => {
+    setStatus('completed')
+    setShowRating(true)
+  }
+  const closeRating = () => {
+    setShowRating(false)
+    if (apiEnabled && orderId && rated > 0) {
+      api.rateOrder(orderId, rated).catch(() => undefined)
+    }
+    f.showToast('Thank you! Your rating was saved.')
+  }
 
   return (
     <div>
-      <TopBar showNav={false} showAvatar={false} back={{ label: 'All orders', onClick: f.goOrders }} />
+      <TopBar showNav={false} showAvatar={false} back={{ label: 'All orders', onClick: () => navigate('/app/orders') }} />
 
       <div className="max-w-[720px] mx-auto px-[28px] pt-[40px] pb-[64px]">
         <div className="flex items-center justify-between mb-[6px]">
-          <span className="text-[13px] font-mono text-ink3">ORD-2041</span>
-          <span className="text-[13px] text-ink2">Placed 16 Jun 2026</span>
+          <span className="text-[13px] font-mono text-ink3">{orderId}</span>
+          {placed && <span className="text-[13px] text-ink2">Placed {placed}</span>}
         </div>
         <h1 className="text-[26px] font-normal tracking-[-0.02em] m-0 mb-[8px]">
-          {f.sel.crop} · {f.orderQty} kg from {f.sel.farmer}
+          {crop} · {qty} kg from {farmer}
         </h1>
         <div className="text-[14px] text-ink2 mb-[36px]">
-          {f.sel.district}, {f.sel.region} · Total {f.orderTotalStr}
+          {district}{region ? `, ${region}` : ''} · Total {totalStr}
         </div>
 
         {/* stepper */}
         <div className="border border-line rounded-[12px] px-[28px] pt-[28px] pb-[8px] mb-[24px]">
-          {f.steps.map((st) => (
+          {steps.map((st) => (
             <div key={st.idx} className="flex gap-[16px] pb-[20px] relative">
               <div className="flex flex-col items-center flex-shrink-0">
                 {st.done && (
@@ -85,10 +145,10 @@ export function Tracking() {
         </div>
 
         <div className="flex gap-[12px] items-center">
-          {f.isDelivered && (
+          {isDelivered && (
             <>
               <button
-                onClick={f.confirmReceipt}
+                onClick={confirmReceipt}
                 className="bg-primary text-primary-ink border-none rounded-[8px] px-[22px] py-[14px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] hover:opacity-[0.88]"
               >
                 I got my order
@@ -97,7 +157,7 @@ export function Tracking() {
             </>
           )}
           <button
-            onClick={f.advanceStep}
+            onClick={() => setStatus((s) => nextStatus(s))}
             className="bg-transparent text-ink2 border border-line rounded-[8px] px-[22px] py-[14px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] hover:border-ink3 hover:text-ink"
           >
             Advance status (demo)
@@ -105,7 +165,7 @@ export function Tracking() {
         </div>
       </div>
 
-      {f.showRating && (
+      {showRating && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-[20px]" style={{ background: 'rgba(0,0,0,0.7)' }}>
           <div className="bg-surface border border-line rounded-[12px] p-[36px] max-w-[380px] w-full text-center">
             <div className="w-[52px] h-[52px] mx-auto mb-[18px] rounded-full bg-success-dim flex items-center justify-center">
@@ -115,22 +175,22 @@ export function Tracking() {
             </div>
             <h2 className="text-[20px] font-normal tracking-[-0.01em] m-0 mb-[8px]">All done!</h2>
             <p className="text-[14px] text-ink2 leading-[1.6] m-0 mb-[24px]">
-              {f.sel.farmer} has been paid {f.orderTotalStr}, straight to their phone. Thank you! How was your order?
+              {farmer} has been paid {totalStr}, straight to their phone. Thank you! How was your order?
             </p>
             <div className="flex justify-center gap-[8px] mb-[26px]">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
-                  onClick={() => f.setRating(n)}
+                  onClick={() => setRated(n)}
                   aria-label={`Rate ${n}`}
                   className="bg-transparent border-none cursor-pointer p-[4px]"
                 >
-                  <StarIcon filled={n <= f.rated} size={30} />
+                  <StarIcon filled={n <= rated} size={30} />
                 </button>
               ))}
             </div>
             <button
-              onClick={f.closeRating}
+              onClick={closeRating}
               className="w-full bg-primary text-primary-ink border-none rounded-[8px] py-[13px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] hover:opacity-[0.88]"
             >
               Submit rating
