@@ -32,6 +32,7 @@ const INITIAL: FarmState = {
   mktSearch: '',
   mktSort: 'best',
   mktVerified: false,
+  mktDelivery: [],
   mktMin: 0,
   mktMax: 10,
   ussdNode: 'root',
@@ -160,10 +161,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const loginEmail = useCallback(async (email: string, password: string): Promise<Role | null> => {
     if (!apiEnabled) {
-      // Demo mode: no backend — sign in as the demo buyer.
-      set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: 'Kwame Asante' } })
-      showToast('Welcome back!')
-      return 'buyer'
+      // No backend configured — real credentials cannot be verified, so no session is created.
+      showToast('Sign-in is unavailable: the live API is not configured.')
+      return null
     }
     try {
       const res = await api.login(email, password)
@@ -180,9 +180,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const registerEmail = useCallback(async (email: string, password: string, fullName: string): Promise<Role | null> => {
     if (!apiEnabled) {
-      set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: fullName || 'Kwame Asante' } })
-      showToast('Welcome! Your account has been created.')
-      return 'buyer'
+      showToast('Sign-up is unavailable: the live API is not configured.')
+      return null
     }
     try {
       const res = await api.register(email, password, fullName)
@@ -198,23 +197,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [set, showToast])
 
   const loginGoogle = useCallback(async (): Promise<Role | null> => {
-    if (firebaseEnabled) {
-      try {
-        const idToken = await signInWithGoogle()
-        const res = await api.googleAuth(idToken)
-        setToken(res.token)
-        const role = (res.role as Role) || 'buyer'
-        set({ token: res.token, currentUser: res.user, role, authStatus: 'authed' })
-        showToast('Welcome!')
-        return role
-      } catch (err) {
-        showToast((err as Error).message)
-        return null
-      }
+    if (!firebaseEnabled || !apiEnabled) {
+      showToast('Google sign-in is not available right now.')
+      return null
     }
-    // No Firebase configured — demo fallback
-    set({ role: 'buyer', authStatus: 'authed', currentUser: { fullName: 'Kwame Asante' } })
-    return 'buyer'
+    try {
+      const idToken = await signInWithGoogle()
+      const res = await api.googleAuth(idToken)
+      setToken(res.token)
+      const role = (res.role as Role) || 'buyer'
+      set({ token: res.token, currentUser: res.user, role, authStatus: 'authed' })
+      showToast('Welcome!')
+      return role
+    } catch (err) {
+      showToast((err as Error).message)
+      return null
+    }
   }, [set, showToast])
 
   const logout = useCallback(() => {

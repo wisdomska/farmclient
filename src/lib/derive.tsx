@@ -87,6 +87,7 @@ export function useFarm() {
   let mktFiltered = all.filter((l) => {
     if (s.mktCrop !== 'All' && l.crop !== s.mktCrop) return false
     if (s.mktVerified && !l.verified) return false
+    if (s.mktDelivery.length > 0 && !s.mktDelivery.some((m) => l.delivery.toLowerCase().includes(m))) return false
     if (l.price < s.mktMin || l.price > s.mktMax) return false
     if (q && !(l.crop + ' ' + l.farmer + ' ' + l.district + ' ' + l.region).toLowerCase().includes(q)) return false
     return true
@@ -103,6 +104,21 @@ export function useFarm() {
     label: c,
     on: s.mktCrop === c,
     onClick: () => set({ mktCrop: s.mktCrop === c ? 'All' : c }),
+  }))
+
+  const deliveryChecks = [
+    { label: 'Pickup', match: 'pickup' },
+    { label: 'Agent drop-off', match: 'agent' },
+    { label: 'Bulk transport', match: 'bulk' },
+  ].map((o) => ({
+    label: o.label,
+    on: s.mktDelivery.includes(o.match),
+    onClick: () =>
+      set({
+        mktDelivery: s.mktDelivery.includes(o.match)
+          ? s.mktDelivery.filter((x) => x !== o.match)
+          : [...s.mktDelivery, o.match],
+      }),
   }))
 
   // ── orders (mock fallback) — presentation derives from lib/orderStatus ──
@@ -226,10 +242,35 @@ export function useFarm() {
     { num: '02', title: 'The buyer orders and pays', desc: 'The buyer picks what they need and pays. The money is held safely until the food arrives.', iconPaths: ['M2 3h20v14H2z', 'M2 17l4 4', 'M22 17l-4 4', 'M12 7v6', 'M9 10h6'] },
     { num: '03', title: 'The farmer gets paid', desc: 'Once the buyer confirms the food, the farmer is paid the same day, straight to their phone.', iconPaths: ['M19 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7', 'M16 17h6', 'M19 14l3 3-3 3'] },
   ]
+  const goMarket = () => navigate(s.authStatus === 'authed' ? '/app/marketplace' : '/marketplace')
   const footerCols = [
-    { title: 'The market', links: ['See all crops', 'Trusted farmers', 'Today’s prices', 'Map view'] },
-    { title: 'For farmers', links: ['Dial *789#', 'Get a small loan', 'Trust score', 'Our field helpers'] },
-    { title: 'About us', links: ['Our story', 'How it works', 'Privacy', 'Contact us'] },
+    {
+      title: 'The market',
+      links: [
+        { label: 'See all crops', onClick: goMarket },
+        { label: 'Trusted farmers', onClick: () => { set({ mktVerified: true }); goMarket() } },
+        { label: 'Today’s prices', onClick: goMarket },
+        { label: 'Map view', onClick: () => { set({ mktView: 'map' }); goMarket() } },
+      ],
+    },
+    {
+      title: 'For farmers',
+      links: [
+        { label: 'Dial *789#', onClick: () => scrollToId('fc-ussd') },
+        { label: 'Get a small loan', onClick: () => scrollToId('fc-ussd') },
+        { label: 'Trust score', onClick: () => scrollToId('fc-ussd') },
+        { label: 'Our field helpers', onClick: () => scrollToId('fc-ussd') },
+      ],
+    },
+    {
+      title: 'About us',
+      links: [
+        { label: 'Our story', onClick: () => scrollToId('fc-story') },
+        { label: 'How it works', onClick: () => scrollToId('fc-how') },
+        { label: 'Privacy', onClick: () => showToast('Our privacy policy is coming soon.') },
+        { label: 'Contact us', onClick: () => showToast('Call or WhatsApp us on 0596 000 000.') },
+      ],
+    },
   ]
 
   const isSignUp = location.pathname === '/sign-up'
@@ -277,7 +318,7 @@ export function useFarm() {
     heroStats,
     howItWorks,
     footerCols,
-    recommended: all.slice(0, 4),
+    recommended: (s.mktCrop === 'All' ? all : all.filter((l) => l.crop === s.mktCrop)).slice(0, 4),
 
     // auth
     isSignUp,
@@ -327,7 +368,8 @@ export function useFarm() {
     setMin: (e: React.ChangeEvent<HTMLInputElement>) => set({ mktMin: parseFloat(e.target.value) || 0 }),
     setMax: (e: React.ChangeEvent<HTMLInputElement>) => set({ mktMax: parseFloat(e.target.value) || 10 }),
     cropChecks,
-    resetFilters: () => set({ mktCrop: 'All', mktSearch: '', mktVerified: false, mktMin: 0, mktMax: 10, mktSort: 'best' }),
+    deliveryChecks,
+    resetFilters: () => set({ mktCrop: 'All', mktSearch: '', mktVerified: false, mktDelivery: [], mktMin: 0, mktMax: 10, mktSort: 'best' }),
 
     // listing detail
     sel: selD,

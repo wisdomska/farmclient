@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { useFarm } from '../lib/derive'
 import { TrendArrow, Spark } from '../components/primitives'
 import { TopBar } from '../components/shared'
 import { FarmScore } from '../components/FarmScore'
+import { FARM_SCENE } from '../lib/data'
 
 export function ListingDetail() {
   const f = useFarm()
+  const [thumb, setThumb] = useState(0)
+  const gallery = [f.sel.photo, FARM_SCENE, f.sel.photo, FARM_SCENE]
+  const mainPhoto = gallery[thumb] ?? f.sel.photo
 
   return (
     <div>
@@ -15,8 +20,8 @@ export function ListingDetail() {
         <div>
           {/* Main gallery image */}
           <div className="border border-line rounded-[12px] bg-surface2 flex items-center justify-center relative text-ink3 mb-[12px]" style={{ aspectRatio: '16/9' }}>
-            {f.sel.photo && (
-              <img src={f.sel.photo} alt={f.sel.crop} className="absolute inset-0 w-full h-full object-cover" />
+            {mainPhoto && (
+              <img src={mainPhoto} alt={f.sel.crop} className="absolute inset-0 w-full h-full object-cover" />
             )}
             <span className="absolute top-[14px] left-[14px] text-[12px] bg-primary-dim text-primary px-[12px] py-[5px] rounded-full">
               {f.sel.crop}
@@ -25,32 +30,17 @@ export function ListingDetail() {
 
           {/* Thumbnails */}
           <div className="grid grid-cols-4 gap-[10px] mb-[32px]">
-            <div className="aspect-square rounded-[8px] overflow-hidden border border-primary">
-              {f.sel.photo && (
-                <img src={f.sel.photo} alt={f.sel.crop} className="w-full h-full object-cover block" />
-              )}
-            </div>
-            <div className="aspect-square rounded-[8px] overflow-hidden border border-line">
-              <img
-                src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1100&q=72"
-                alt="Farm"
-                className="w-full h-full object-cover block"
-                style={{ opacity: 0.9 }}
-              />
-            </div>
-            <div className="aspect-square rounded-[8px] overflow-hidden border border-line">
-              {f.sel.photo && (
-                <img src={f.sel.photo} alt={f.sel.crop} className="w-full h-full object-cover block" style={{ opacity: 0.85 }} />
-              )}
-            </div>
-            <div className="aspect-square rounded-[8px] overflow-hidden border border-line">
-              <img
-                src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1100&q=72"
-                alt="Farm"
-                className="w-full h-full object-cover block"
-                style={{ opacity: 0.75 }}
-              />
-            </div>
+            {gallery.map((src, i) => (
+              <div
+                key={i}
+                onClick={() => setThumb(i)}
+                className={`aspect-square rounded-[8px] overflow-hidden border cursor-pointer ${thumb === i ? 'border-primary' : 'border-line'}`}
+              >
+                {src && (
+                  <img src={src} alt={i % 2 === 0 ? f.sel.crop : 'Farm'} className="w-full h-full object-cover block" style={{ opacity: thumb === i ? 1 : 0.85 }} />
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Title */}

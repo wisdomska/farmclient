@@ -61,6 +61,7 @@ export interface FarmState {
   mktSearch: string
   mktSort: string
   mktVerified: boolean
+  mktDelivery: string[]
   mktMin: number
   mktMax: number
   ussdNode: string

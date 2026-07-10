@@ -75,7 +75,13 @@ export function TopBar({
   const t = useT()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
   const authed = f.authStatus === 'authed'
+  const notifications = [
+    { text: 'Ibrahim confirmed your maize order', sub: 'ORD-2038 · today, 11:02', to: '/app/orders/ORD-2038' },
+    { text: 'Your tomato order is being prepared', sub: 'ORD-2041 · today, 09:40', to: '/app/orders/ORD-2041' },
+    { text: 'Yam is up 3.2% this week in Bono East', sub: 'Price alert · yesterday', to: '/app/marketplace' },
+  ]
   const initials = ((f.currentUser?.fullName as string | undefined) ?? 'Kwame Asante')
     .split(' ')
     .map((w) => w[0])
@@ -149,13 +155,37 @@ export function TopBar({
       )}
 
       {showNotif && (
-        <button
-          aria-label="Notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-transparent text-ink2 hover:text-ink"
-        >
-          <Icon paths={['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0']} size={18} />
-          <span className="absolute right-2 top-[7px] h-[7px] w-[7px] rounded-full border-[1.5px] border-bg bg-primary" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setNotifOpen((o) => !o)}
+            aria-label="Notifications"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-transparent text-ink2 hover:text-ink"
+          >
+            <Icon paths={['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0']} size={18} />
+            <span className="absolute right-2 top-[7px] h-[7px] w-[7px] rounded-full border-[1.5px] border-bg bg-primary" />
+          </button>
+          {notifOpen && (
+            <>
+              <div className="fixed inset-0 z-[60]" onClick={() => setNotifOpen(false)} />
+              <div className="absolute right-0 top-[46px] z-[70] w-[300px] bg-surface border border-line rounded-[8px] py-[6px] overflow-hidden">
+                <div className="px-[14px] py-[8px] text-[12px] tracking-[0.04em] uppercase text-ink3">Notifications</div>
+                {notifications.map((n) => (
+                  <button
+                    key={n.text}
+                    onClick={() => {
+                      setNotifOpen(false)
+                      navigate(n.to)
+                    }}
+                    className="w-full text-left bg-transparent border-none px-[14px] py-[10px] cursor-pointer font-[inherit] hover:bg-surface2"
+                  >
+                    <div className="text-[13.5px] text-ink">{n.text}</div>
+                    <div className="text-[11.5px] text-ink3 mt-[2px]">{n.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       <ThemeToggle />

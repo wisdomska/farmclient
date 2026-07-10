@@ -14,6 +14,15 @@ export function Auth() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  function validate(): string | null {
+    if (f.isSignUp && fullName.trim().length < 2) return 'Please enter your full name.'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Please enter a valid email address.'
+    if (f.isSignUp && password.length < 8) return 'Your password must be at least 8 characters.'
+    if (!f.isSignUp && !password) return 'Please enter your password.'
+    return null
+  }
 
   function afterAuth(role: Role | null) {
     if (!role) return
@@ -32,11 +41,18 @@ export function Auth() {
   }, [f.authStatus, f.role])
 
   async function handleSubmit() {
+    const problem = validate()
+    if (problem) {
+      setError(problem)
+      return
+    }
+    setError('')
     setLoading(true)
     const role = f.isSignUp
-      ? await f.registerEmail(email, password, fullName)
-      : await f.loginEmail(email, password)
+      ? await f.registerEmail(email.trim(), password, fullName.trim())
+      : await f.loginEmail(email.trim(), password)
     setLoading(false)
+    if (!role) setError(f.isSignUp ? 'We could not create your account. Check the details and try again.' : 'Sign-in failed. Check your email and password.')
     afterAuth(role)
   }
 
@@ -178,6 +194,11 @@ export function Auth() {
               className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
             />
           </div>
+
+          {/* validation / auth error */}
+          {error && (
+            <div className="text-[13px] text-error mb-[16px] leading-[1.5]">{error}</div>
+          )}
 
           {/* primary CTA */}
           <button

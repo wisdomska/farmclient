@@ -98,7 +98,9 @@ export function Ussd() {
         {/* Call / End buttons */}
         <div className="flex justify-between mt-[12px]">
           <button
+            onClick={f.ussdReset}
             aria-label="Call"
+            title="Dial *789#"
             className="flex items-center justify-center rounded-[8px] cursor-pointer bg-success"
             style={{ width: '54px', height: '34px', border: 'none' }}
           >

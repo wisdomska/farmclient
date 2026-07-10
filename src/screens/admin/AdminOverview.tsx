@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useFarm } from '../../lib/derive'
 import { Icon, Spark } from '../../components/primitives'
 
 export function AdminOverview() {
   const f = useFarm()
+  const [month, setMonth] = useState('Jun 2026')
 
   return (
     <div>
@@ -11,9 +13,18 @@ export function AdminOverview() {
           <h1 className="text-[24px] font-normal tracking-[-0.02em] text-ink m-0 mb-[3px]">Overview</h1>
           <span className="text-[13px] text-ink2">Platform health · last 30 days</span>
         </div>
-        <div className="flex items-center gap-[8px] bg-surface border border-line rounded-[8px] px-[13px] py-[9px] text-[13px] text-ink cursor-pointer">
-          Jun 2026
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="relative flex items-center bg-surface border border-line rounded-[8px] px-[13px]">
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            aria-label="Reporting month"
+            className="appearance-none bg-transparent border-none outline-none text-ink text-[13px] font-[inherit] py-[9px] pr-[22px] cursor-pointer"
+          >
+            <option>Jun 2026</option>
+            <option>May 2026</option>
+            <option>Apr 2026</option>
+          </select>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="absolute right-[10px] pointer-events-none text-ink">
             <path d="m6 9 6 6 6-6"/>
           </svg>
         </div>

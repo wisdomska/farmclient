@@ -81,22 +81,29 @@ export function Marketplace() {
             </div>
           </div>
 
-          {/* Delivery checkboxes (static) */}
+          {/* Delivery checkboxes */}
           <div className="mb-[26px]">
             <div className="text-[12px] tracking-[0.04em] uppercase text-ink3 mb-[14px]">Delivery</div>
             <div className="flex flex-col gap-[11px]">
-              <label className="flex items-center gap-[10px] text-[13.5px] text-ink2 cursor-pointer">
-                <span className="w-[16px] h-[16px] rounded-[4px] border border-line flex-shrink-0" />
-                Pickup
-              </label>
-              <label className="flex items-center gap-[10px] text-[13.5px] text-ink2 cursor-pointer">
-                <span className="w-[16px] h-[16px] rounded-[4px] border border-line flex-shrink-0" />
-                Agent drop-off
-              </label>
-              <label className="flex items-center gap-[10px] text-[13.5px] text-ink2 cursor-pointer">
-                <span className="w-[16px] h-[16px] rounded-[4px] border border-line flex-shrink-0" />
-                Bulk transport
-              </label>
+              {f.deliveryChecks.map((d) => (
+                <label
+                  key={d.label}
+                  onClick={d.onClick}
+                  className="flex items-center gap-[10px] text-[13.5px] text-ink2 cursor-pointer"
+                >
+                  <span className="w-[16px] h-[16px] rounded-[4px] border border-line flex items-center justify-center flex-shrink-0">
+                    {d.on && (
+                      <Icon
+                        paths={['M20 6 9 17l-5-5']}
+                        size={11}
+                        stroke="var(--primary)"
+                        strokeWidth={3}
+                      />
+                    )}
+                  </span>
+                  {d.label}
+                </label>
+              ))}
             </div>
           </div>
 

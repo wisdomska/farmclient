@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useFarm } from '../../lib/derive'
 import { CropGlyph, Spark } from '../../components/primitives'
 
 export function FarmerSell() {
   const f = useFarm()
+  const [crop, setCrop] = useState('Yam')
 
   return (
     <div style={{ padding: '14px 20px 28px' }}>
@@ -14,8 +16,9 @@ export function FarmerSell() {
         {f.addCrops.map((c) => (
           <div
             key={c.crop}
+            onClick={() => setCrop(c.crop)}
             className={`flex flex-col items-center gap-[4px] rounded-[8px] border p-[10px] cursor-pointer text-center ${
-              c.active
+              crop === c.crop
                 ? 'bg-primary-dim border-primary text-primary'
                 : 'bg-surface2 border-line text-ink2'
             }`}

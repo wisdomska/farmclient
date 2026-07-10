@@ -153,7 +153,15 @@ export function Tracking() {
               >
                 I got my order
               </button>
-              <span className="text-[13px] text-ink3 cursor-pointer underline">Report a problem</span>
+              <span
+                onClick={() => {
+                  setStatus('disputed')
+                  f.showToast('We opened a dispute. Our team will call you shortly.')
+                }}
+                className="text-[13px] text-ink3 cursor-pointer underline hover:text-ink"
+              >
+                Report a problem
+              </span>
             </>
           )}
           <button
