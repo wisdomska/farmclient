@@ -27,6 +27,10 @@ export const LISTINGS: Listing[] = [
   { id: 'L22', crop: 'Pepper', farmer: 'Mensah Kotey', region: 'Greater Accra', district: 'Dodowa', distanceKm: 11, price: 8.4, qty: 280, harvest: '20 Jul 2026', rating: 3.9, reviews: 9, score: 597, verified: false, ai: 'high', trend: +6.2, storage: 'Ambient, same-day', delivery: 'Pickup' },
   { id: 'L23', crop: 'Onion', farmer: 'Awudu Seidu', region: 'Upper West', district: 'Tumu', distanceKm: 102, price: 4.4, qty: 2100, harvest: '19 Jul 2026', rating: 4.5, reviews: 31, score: 787, verified: true, ai: 'fair', trend: -1.1, storage: 'Dry store, netted', delivery: 'Bulk transport' },
   { id: 'L24', crop: 'Onion', farmer: 'Patience Nyarko', region: 'Eastern', district: 'Nsawam', distanceKm: 26, price: 5.1, qty: 900, harvest: '24 Jul 2026', rating: 4.4, reviews: 27, score: 703, verified: true, ai: 'fair', trend: +0.7, storage: 'Dry store, netted', delivery: 'Pickup or agent drop-off' },
+  { id: 'L25', crop: 'Soybean', farmer: 'Zainab Fuseini', region: 'Northern', district: 'Savelugu', distanceKm: 41, price: 3.9, qty: 2800, harvest: '05 Jul 2026', rating: 4.6, reviews: 38, score: 764, verified: true, ai: 'fair', trend: +0.4, storage: 'Dried, bagged', delivery: 'Bulk transport' },
+  { id: 'L26', crop: 'Soybean', farmer: 'Joseph Ansah', region: 'Bono East', district: 'Atebubu', distanceKm: 33, price: 4.1, qty: 1600, harvest: '08 Jul 2026', rating: 4.1, reviews: 14, score: 682, verified: false, ai: 'high', trend: +1.6, storage: 'Dried, bagged', delivery: 'Pickup' },
+  { id: 'L27', crop: 'Sorghum', farmer: 'Alhassan Iddrisu', region: 'Upper East', district: 'Bawku', distanceKm: 97, price: 2.6, qty: 3400, harvest: '04 Jul 2026', rating: 4.7, reviews: 51, score: 808, verified: true, ai: 'fair', trend: -0.3, storage: 'Threshed, bagged', delivery: 'Bulk transport' },
+  { id: 'L28', crop: 'Sorghum', farmer: 'Mariama Sulemana', region: 'Savannah', district: 'Bole', distanceKm: 84, price: 2.4, qty: 2900, harvest: '09 Jul 2026', rating: 4.4, reviews: 23, score: 725, verified: true, ai: 'low', trend: 0, storage: 'Threshed, bagged', delivery: 'Pickup or agent drop-off' },
 ]
 
 /**
@@ -144,4 +148,4 @@ export function keypadSub(d: string): string {
   return m[d] || ''
 }
 
-export const CROPS_ALL = ['Maize', 'Yam', 'Cassava', 'Tomato', 'Plantain', 'Rice', 'Pepper', 'Onion']
+export const CROPS_ALL = ['Maize', 'Yam', 'Cassava', 'Tomato', 'Plantain', 'Rice', 'Pepper', 'Onion', 'Soybean', 'Sorghum']

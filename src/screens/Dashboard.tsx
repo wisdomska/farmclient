@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useFarm } from '../lib/derive'
 import { TrendArrow } from '../components/primitives'
-import { TopBar, ListingCard } from '../components/shared'
+import { TopBar, ListingCard, ListingCardSkeleton } from '../components/shared'
 
 export function Dashboard() {
   const f = useFarm()
@@ -96,9 +96,9 @@ export function Dashboard() {
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-[36px]">
-          {f.recommended.map((l) => (
-            <ListingCard key={l.id} l={l} />
-          ))}
+          {f.listingsLoading
+            ? Array.from({ length: 4 }, (_, i) => <ListingCardSkeleton key={i} />)
+            : f.recommended.map((l) => <ListingCard key={l.id} l={l} />)}
         </div>
 
         {/* crop filter tabs */}

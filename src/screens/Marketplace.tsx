@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useFarm } from '../lib/derive'
 import { Icon } from '../components/primitives'
-import { TopBar, ListingCard } from '../components/shared'
+import { TopBar, ListingCard, ListingCardSkeleton } from '../components/shared'
 import { FarmScore } from '../components/FarmScore'
 
 export function Marketplace() {
@@ -150,7 +150,9 @@ export function Marketplace() {
             <div>
               <h1 className="text-[22px] font-normal tracking-[-0.02em] m-0 mb-[3px]">The market</h1>
               <span className="text-[13px] text-ink2">
-                {f.mktCount} on sale now · {f.mktRegionCount} {f.mktRegionCount === 1 ? 'region' : 'regions'}
+                {f.listingsLoading
+                  ? 'Loading the market…'
+                  : `${f.mktCount} on sale now · ${f.mktRegionCount} ${f.mktRegionCount === 1 ? 'region' : 'regions'}`}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-[14px]">
@@ -235,8 +237,15 @@ export function Marketplace() {
             </div>
           </div>
 
+          {/* Loading skeletons — no demo data flashed while live listings load */}
+          {f.listingsLoading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px]" role="status" aria-label="Loading listings">
+              {Array.from({ length: 8 }, (_, i) => <ListingCardSkeleton key={i} />)}
+            </div>
+          )}
+
           {/* Empty state — filters matched nothing */}
-          {f.mktCount === 0 && (
+          {!f.listingsLoading && f.mktCount === 0 && (
             <div className="flex flex-col items-center gap-[12px] bg-surface border border-line rounded-[12px] p-[36px] text-center">
               <div className="text-[16px] text-ink">Nothing matches those filters</div>
               <div className="text-[13px] text-ink2 max-w-[320px]">
@@ -252,7 +261,7 @@ export function Marketplace() {
           )}
 
           {/* Map view */}
-          {f.mktCount > 0 && f.mapActive && (
+          {!f.listingsLoading && f.mktCount > 0 && f.mapActive && (
             <div className="relative h-[560px] border border-line rounded-[12px] overflow-hidden bg-surface">
               <svg
                 width="100%"
@@ -324,7 +333,7 @@ export function Marketplace() {
           )}
 
           {/* Grid view */}
-          {f.mktCount > 0 && f.gridActive && (
+          {!f.listingsLoading && f.mktCount > 0 && f.gridActive && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px]">
               {f.mktFiltered.map((l) => (
                 <ListingCard key={l.id} l={l} showHarvest />
@@ -333,7 +342,7 @@ export function Marketplace() {
           )}
 
           {/* List view */}
-          {f.mktCount > 0 && f.listActive && (
+          {!f.listingsLoading && f.mktCount > 0 && f.listActive && (
             <div className="flex flex-col gap-[12px]">
               {f.mktFiltered.map((l) => (
                 <div

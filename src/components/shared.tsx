@@ -229,6 +229,20 @@ export function TopBar({
   )
 }
 
+/** Placeholder card shown while live listings load — same footprint as ListingCard, no layout shift. */
+export function ListingCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-line bg-surface" aria-hidden="true">
+      <div className="aspect-video bg-surface2 fc-pulse" />
+      <div className="p-[14px] flex flex-col gap-[10px]">
+        <div className="h-[14px] w-[60%] rounded bg-surface2 fc-pulse" />
+        <div className="h-[12px] w-[45%] rounded bg-surface2 fc-pulse" />
+        <div className="h-[22px] w-[50%] rounded bg-surface2 fc-pulse" />
+      </div>
+    </div>
+  )
+}
+
 /** Marketplace / dashboard produce card. */
 export function ListingCard({ l, showHarvest }: { l: DisplayListing; showHarvest?: boolean }) {
   return (

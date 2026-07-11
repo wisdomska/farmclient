@@ -40,6 +40,7 @@ const INITIAL: FarmState = {
   token: getToken(),
   currentUser: null,
   liveListings: null,
+  listingsStatus: apiEnabled ? 'loading' : 'ready',
   role: null,
   authStatus: 'idle',
   farmerScore: null,
@@ -250,11 +251,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const loadListings = useCallback(async (params?: Record<string, string>) => {
     if (!apiEnabled) return
     try {
-      const res = await api.listings(params)
+      const res = await api.listings({ pageSize: '60', ...params })
       const mapped: Listing[] = res.items.map(mapApiListing)
-      setState((s) => ({ ...s, liveListings: mapped }))
+      // An empty live catalogue falls back to the demo catalogue rather than
+      // presenting buyers with a bare marketplace.
+      setState((s) => ({ ...s, liveListings: mapped.length > 0 ? mapped : null, listingsStatus: 'ready' }))
     } catch {
-      setState((s) => ({ ...s, liveListings: null }))
+      setState((s) => ({ ...s, liveListings: null, listingsStatus: 'ready' }))
     }
   }, [])
 

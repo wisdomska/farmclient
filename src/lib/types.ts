@@ -70,6 +70,8 @@ export interface FarmState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any
   liveListings: Listing[] | null
+  /** Lifecycle of the live-listings fetch: skeletons while loading, then live data (or demo fallback). */
+  listingsStatus: 'loading' | 'ready'
   role: Role | null
   authStatus: AuthStatus
   farmerScore: number | null

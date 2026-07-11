@@ -79,7 +79,7 @@ export function useFarm() {
   }))
 
   // ── marketplace ──
-  const cropTabsOrdered = ['All', 'Maize', 'Yam', 'Cassava', 'Tomato', 'Plantain', 'Rice', 'Pepper', 'Onion'].map((c) => ({
+  const cropTabsOrdered = ['All', ...CROPS_ALL].map((c) => ({
     label: c,
     active: s.mktCrop === c,
     onClick: () => set({ mktCrop: c }),
@@ -292,6 +292,7 @@ export function useFarm() {
     logout,
     loadListings,
     liveListings: s.liveListings,
+    listingsLoading: apiEnabled && s.listingsStatus === 'loading',
     currentUser: s.currentUser,
     role: s.role,
     authStatus: s.authStatus,
