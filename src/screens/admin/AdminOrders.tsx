@@ -7,10 +7,10 @@ export function AdminOrders() {
     <div>
       <h1 className="text-[24px] font-normal tracking-[-0.02em] text-ink m-0 mb-[3px]">Orders</h1>
       <span className="text-[13px] text-ink2">All buyer orders and where they are now</span>
-      <div className="border border-line rounded-[8px] overflow-hidden mt-[22px]">
+      <div className="fcscroll border border-line rounded-[8px] overflow-x-auto mt-[22px]">
         <div
           className="bg-surface text-[12px] text-ink3 tracking-[0.04em] uppercase px-[18px] py-[12px]"
-          style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.6fr 1.2fr 1fr 1fr' }}
+          style={{ display: 'grid', minWidth: 560, gridTemplateColumns: '0.9fr 1.6fr 1.2fr 1fr 1fr' }}
         >
           <span>Order</span>
           <span>Crop</span>
@@ -22,7 +22,7 @@ export function AdminOrders() {
           <div
             key={o.id}
             className="border-t border-line px-[18px] py-[14px] text-[13.5px] items-center"
-            style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.6fr 1.2fr 1fr 1fr' }}
+            style={{ display: 'grid', minWidth: 560, gridTemplateColumns: '0.9fr 1.6fr 1.2fr 1fr 1fr' }}
           >
             <span className="text-ink3 font-mono text-[12px]">{o.id}</span>
             <span className="text-ink">{o.crop}</span>

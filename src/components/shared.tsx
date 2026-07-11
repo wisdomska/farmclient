@@ -131,7 +131,7 @@ export function TopBar({
       )}
 
       {showSearch && (
-        <div className="hidden md:flex h-[42px] max-w-[440px] flex-1 items-center gap-[10px] rounded-lg border border-line bg-surface px-[14px]">
+        <div className="hidden md:flex h-[42px] min-w-0 max-w-[440px] flex-1 items-center gap-[10px] rounded-lg border border-line bg-surface px-[14px]">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
@@ -141,7 +141,7 @@ export function TopBar({
             value={f.mktSearch}
             onChange={f.setSearch}
             onKeyDown={f.searchToMarket}
-            className="flex-1 border-none bg-transparent text-[14px] text-ink outline-none"
+            className="flex-1 min-w-0 border-none bg-transparent text-[14px] text-ink outline-none"
           />
         </div>
       )}
@@ -157,7 +157,7 @@ export function TopBar({
       )}
 
       {showNotif && (
-        <div className="relative">
+        <div className="relative hidden sm:block">
           <button
             onClick={() => setNotifOpen((o) => !o)}
             aria-label="Notifications"
@@ -190,7 +190,7 @@ export function TopBar({
         </div>
       )}
 
-      <ThemeToggle />
+      <span className="hidden md:block"><ThemeToggle /></span>
       {right}
       {showAvatar && !authed && (
         <button

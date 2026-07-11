@@ -127,7 +127,7 @@ export function Dashboard() {
           {f.orders.map((o) => (
             <div
               key={o.id}
-              className="flex items-center gap-5 bg-surface border border-line rounded-[8px] px-5 py-[18px]"
+              className="flex flex-wrap items-center gap-x-5 gap-y-2 bg-surface border border-line rounded-[8px] px-5 py-[18px]"
             >
               <span className="text-[12px] font-mono text-ink3 w-[84px]">{o.id}</span>
               <span

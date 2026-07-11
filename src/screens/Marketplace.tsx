@@ -325,7 +325,7 @@ export function Marketplace() {
 
           {/* Grid view */}
           {f.mktCount > 0 && f.gridActive && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-[18px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px]">
               {f.mktFiltered.map((l) => (
                 <ListingCard key={l.id} l={l} showHarvest />
               ))}

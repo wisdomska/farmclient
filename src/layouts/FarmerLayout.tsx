@@ -36,9 +36,9 @@ function FarmerShell() {
         <div className="text-[13px] text-ink2 mt-[12px] max-w-[240px] leading-[1.6]">A simple app for farmers with a smartphone. It does the same things as dialing *789#. Tap the buttons below to look around.</div>
       </div>
 
-      {/* Phone frame */}
-      <div style={{ width: 384, background: '#000', borderRadius: 48, padding: 9 }}>
-        <div className="bg-bg" style={{ borderRadius: 40, overflow: 'hidden', height: 788, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Phone frame — never wider than the real phone it's viewed on */}
+      <div style={{ width: 'min(384px, 100%)', background: '#000', borderRadius: 48, padding: 9 }}>
+        <div className="bg-bg" style={{ borderRadius: 40, overflow: 'hidden', height: 788, maxHeight: '88vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
           {/* Notch */}
           <div style={{ position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)', width: 104, height: 28, background: '#000', borderRadius: 20, zIndex: 6 }} />
 

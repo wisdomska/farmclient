@@ -159,7 +159,7 @@ export function Tracking() {
           ))}
         </div>
 
-        <div className="flex gap-[12px] items-center">
+        <div className="flex flex-wrap gap-[12px] items-center">
           {isDelivered && (
             <>
               <button

@@ -41,7 +41,7 @@ export function Landing() {
           </button>
           <button
             onClick={f.goPublicMarket}
-            className="bg-primary text-primary-ink border-none rounded-[8px] px-[18px] py-[11px] text-[14px] font-normal cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
+            className="hidden md:block bg-primary text-primary-ink border-none rounded-[8px] px-[18px] py-[11px] text-[14px] font-normal cursor-pointer font-[inherit] transition-opacity duration-150 hover:opacity-[0.88]"
           >
             {t('nav.seeMarket')}
           </button>

@@ -70,10 +70,10 @@ export function AdminSms() {
 
       <div className="mt-[28px]">
         <div className="text-[15px] text-ink mb-[14px]">Delivery log</div>
-        <div className="border border-line rounded-[8px] overflow-hidden">
+        <div className="fcscroll border border-line rounded-[8px] overflow-x-auto">
           <div
             className="bg-surface text-[12px] text-ink3 tracking-[0.04em] uppercase px-[16px] py-[12px]"
-            style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 0.8fr' }}
+            style={{ display: 'grid', minWidth: 560, gridTemplateColumns: '1.4fr 1fr 1fr 0.8fr' }}
           >
             <span>Recipient</span>
             <span>Crop</span>
@@ -84,7 +84,7 @@ export function AdminSms() {
             <div
               key={m.to}
               className="border-t border-line px-[16px] py-[13px] text-[13.5px] items-center"
-              style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 0.8fr' }}
+              style={{ display: 'grid', minWidth: 560, gridTemplateColumns: '1.4fr 1fr 1fr 0.8fr' }}
             >
               <span className="text-ink font-mono text-[12.5px]">{m.to}</span>
               <span className="text-ink2">{m.crop}</span>

@@ -79,7 +79,7 @@ export function ListingDetail() {
               </svg>
               <span className="text-[16px] text-ink">Fair price guide</span>
             </div>
-            <div className="flex items-end justify-between gap-[24px]">
+            <div className="flex flex-wrap items-end justify-between gap-[24px]">
               <div>
                 <div className="text-[12px] text-ink3 mb-[6px]">This listing's price</div>
                 <div className="flex items-baseline gap-[6px]">

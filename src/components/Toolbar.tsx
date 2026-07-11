@@ -30,7 +30,7 @@ export function Toolbar() {
   const location = useLocation()
   const f = useFarm()
   return (
-    <div className="sticky top-0 z-[90] flex h-[46px] items-center gap-4 border-b border-line bg-surface px-[14px]">
+    <div className="sticky top-0 z-[90] flex h-[46px] items-center gap-2 sm:gap-4 border-b border-line bg-surface px-[10px] sm:px-[14px] overflow-hidden">
       <div className="flex flex-shrink-0 items-center gap-2">
         <div className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] bg-primary">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
