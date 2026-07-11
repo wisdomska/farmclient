@@ -16,9 +16,10 @@
   --primary: #08eedb;
   --primary-dim: #052e2b;
   --primary-text: #0a0a0a;
+  /* --error lightened from #e74c3c so 11px badge text on --error-dim meets WCAG AA (4.97:1) */
   --success: #2ecc71;
   --warning: #f39c12;
-  --error: #e74c3c;
+  --error: #ec6a57;
   --success-dim: rgba(46, 204, 113, 0.14);
   --warning-dim: rgba(243, 156, 18, 0.14);
   --error-dim: rgba(231, 76, 60, 0.14);
@@ -35,8 +36,9 @@
   --primary: #073e44;
   --primary-dim: #e2f0f1;
   --primary-text: #ffffff;
-  --success: #1a8040;
-  --warning: #b85c00;
+  /* --success/--warning darkened so badge text on their dim tints meets WCAG AA (5.2:1 / 4.8:1) */
+  --success: #166b36;
+  --warning: #9c4e00;
   --error: #b01c1c;
   --success-dim: rgba(26, 128, 64, 0.1);
   --warning-dim: rgba(184, 92, 0, 0.1);

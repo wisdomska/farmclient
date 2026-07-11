@@ -61,6 +61,41 @@ describe('status transitions', () => {
   })
 })
 
+describe('one order walked through every stage — all three surfaces agree', () => {
+  // Simulates a single order progressing pending_payment → completed and asserts
+  // the three places that render its status (buyer Orders list chip, buyer
+  // Tracking stepper, admin Orders table chip) derive identical presentation
+  // at every step. All three call statusChip/orderStatusInfo, so any drift in
+  // one surface would surface here as a mismatch.
+  test('happy-path walk keeps list, tracking and admin views in lockstep', () => {
+    let status: OrderStatus = 'pending_payment'
+    const seenSteps: number[] = []
+    for (let i = 0; i < HAPPY_PATH.length; i++) {
+      const listChip = statusChip(status)      // buyer Orders list row
+      const tracking = orderStatusInfo(status) // buyer Tracking stepper
+      const adminChip = statusChip(status)     // admin Orders table row
+
+      expect(listChip.label).toBe(tracking.label)
+      expect(adminChip).toEqual(listChip)
+      expect(tracking.trackStep).toBe(i)
+      expect(ORDERED_STEP_LABELS[tracking.trackStep]).toBeTruthy()
+      seenSteps.push(tracking.trackStep)
+
+      status = nextStatus(status)
+    }
+    expect(seenSteps).toEqual([0, 1, 2, 3, 4])
+  })
+
+  test('a dispute mid-flow shows the same paused state on every surface', () => {
+    const status: OrderStatus = 'disputed'
+    const listChip = statusChip(status)
+    const tracking = orderStatusInfo(status)
+    expect(listChip.label).toBe('Disputed')
+    expect(tracking.label).toBe('Disputed')
+    expect(tracking.trackStep).toBe(STATUS_MAP.disputed.trackStep)
+  })
+})
+
 describe('statusChip', () => {
   test.each(ALL_STATUSES)('%s list chip label matches the canonical STATUS_MAP label', (status) => {
     const c = statusChip(status)

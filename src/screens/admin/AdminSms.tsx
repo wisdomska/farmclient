@@ -1,14 +1,17 @@
+import { useState } from 'react'
 import { useFarm } from '../../lib/derive'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
 
 export function AdminSms() {
   const f = useFarm()
+  const [confirming, setConfirming] = useState(false)
 
   return (
     <div style={{ maxWidth: 760 }}>
       <h1 className="text-[24px] font-normal tracking-[-0.02em] text-ink m-0 mb-[3px]">SMS broadcast</h1>
       <span className="text-[13px] text-ink2">Send price updates and news to farmers by text</span>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, marginTop: 26 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_280px]" style={{ gap: 20, marginTop: 26 }}>
         <div>
           <label className="block text-[13px] text-ink2 mb-[8px]">Message</label>
           <textarea
@@ -21,7 +24,7 @@ export function AdminSms() {
             <span>Sent by text message</span>
           </div>
           <button
-            onClick={f.sendBroadcast}
+            onClick={() => setConfirming(true)}
             className="mt-[18px] inline-flex items-center gap-[9px] bg-primary text-primary-ink border-none rounded-[8px] px-[22px] py-[13px] text-[14px] cursor-pointer font-[inherit]"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -52,6 +55,18 @@ export function AdminSms() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirming}
+        title="Send this broadcast?"
+        body="This will queue a text message to 2.04M farmers. SMS broadcasts cost real money and cannot be recalled once sent."
+        confirmLabel="Yes, send broadcast"
+        onConfirm={() => {
+          setConfirming(false)
+          f.sendBroadcast()
+        }}
+        onCancel={() => setConfirming(false)}
+      />
 
       <div className="mt-[28px]">
         <div className="text-[15px] text-ink mb-[14px]">Delivery log</div>

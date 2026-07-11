@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { USSD_NODES } from './lib/data'
-import { api, apiEnabled, clearToken, decodeJwtClaim, getToken, mapApiListing, setToken } from './lib/api'
+import { api, apiEnabled, clearToken, decodeJwtClaim, getToken, mapApiListing, setToken, setUnauthorizedHandler } from './lib/api'
 import { firebaseEnabled, signInWithGoogle } from './lib/firebase'
 import type { FarmState, Lang, Listing, Role, Theme } from './lib/types'
 
@@ -129,6 +129,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       /* noop */
     }
   }, [])
+
+  // Session expiry mid-flow (e.g. during checkout): tear the session down so
+  // the route guard redirects to /sign-in?redirect=<current page>. After
+  // re-auth the user lands back where they were — no broken payment state.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearToken()
+      set({ token: null, currentUser: null, role: null, authStatus: 'anon', farmerScore: null })
+      showToast('Your session expired — please sign in again.')
+    })
+  }, [set, showToast])
 
   // Boot-time session rehydration: a stored token only counts as a session
   // once the server has re-verified it (POST /auth/refresh re-signs the JWT).

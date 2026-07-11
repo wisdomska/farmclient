@@ -57,13 +57,13 @@ export function FarmerHome() {
       {/* What I'm selling — tap in to manage listings */}
       <div className="flex items-center justify-between mb-[12px]">
         <div className="text-[14px] text-ink">What I'm selling</div>
-        <span onClick={f.goListingsTab} className="text-[12px] text-primary cursor-pointer">See all</span>
+        <button onClick={f.goListingsTab} className="text-[12px] text-primary cursor-pointer bg-transparent border-none font-[inherit] p-0 min-h-[32px]">See all</button>
       </div>
       <div className="flex flex-col gap-[10px] mb-[24px]">
         {/* First item — uses sel.photo */}
         <div className="flex items-center gap-[12px] bg-surface border border-line rounded-[10px] p-[12px]">
           <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-tertiary)' }}>
-            {f.sel.photo && <img src={f.sel.photo} alt={f.sel.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+            {f.sel.photo && <img loading="lazy" decoding="async" src={f.sel.photo} alt={f.sel.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
           </div>
           <div className="flex-1">
             <div className="text-[14px] text-ink">Yam · 1,800 kg</div>
@@ -74,7 +74,7 @@ export function FarmerHome() {
         {/* Second item — static plantain img */}
         <div className="flex items-center gap-[12px] bg-surface border border-line rounded-[10px] p-[12px]">
           <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-tertiary)' }}>
-            <img src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=200&q=70" alt="Plantain" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=200&q=70" alt="Plantain" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
           <div className="flex-1">
             <div className="text-[14px] text-ink">Plantain · 980 kg</div>

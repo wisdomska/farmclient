@@ -1,24 +1,81 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFarm } from '../lib/derive'
 import { TopBar } from '../components/shared'
+
+/** Real Ghanaian mobile prefixes per network (SRS payment-method spec). */
+const NETWORK_PREFIXES: Record<string, string[]> = {
+  mtn: ['024', '054', '055', '059'],
+  telecel: ['020', '050'],
+  at: ['026', '027', '056', '057'],
+}
+
+const PAY_TIMEOUT_MS = 45_000
 
 export function Checkout() {
   const f = useFarm()
   const navigate = useNavigate()
   const [momo, setMomo] = useState('')
+  const [fieldError, setFieldError] = useState('')
+  const [payError, setPayError] = useState('')
+  // Ref-based guard: state updates are async, so a fast double-tap on
+  // "Confirm & Pay" could otherwise fire two payment requests.
+  const submitting = useRef(false)
+
+  const method = f.payMethods.find((p) => p.active)?.key ?? 'mtn'
+  const isMomo = method !== 'bank'
+
+  function validateMomo(): string | null {
+    if (!isMomo) return null
+    const digits = momo.replace(/\D/g, '')
+    if (digits.length !== 10 || !digits.startsWith('0')) {
+      return 'Enter a 10-digit Ghana mobile number, e.g. 024 123 4567.'
+    }
+    const prefixes = NETWORK_PREFIXES[method] ?? []
+    if (!prefixes.includes(digits.slice(0, 3))) {
+      const name = f.payMethods.find((p) => p.key === method)?.name ?? 'this network'
+      return `That number is not a ${name} number — ${name} numbers start with ${prefixes.join(', ')}.`
+    }
+    return null
+  }
 
   async function confirmAndPay() {
-    const res = await f.placeOrder(f.sel.id, momo)
-    if (res) {
-      navigate(`/app/orders/${res.orderId}`, {
-        state: {
-          listingId: f.sel.id,
-          qty: f.orderQty,
-          status: 'pending_payment',
-          placed: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-        },
-      })
+    if (submitting.current) return
+    const problem = validateMomo()
+    if (problem) {
+      setFieldError(problem)
+      return
+    }
+    setFieldError('')
+    setPayError('')
+    submitting.current = true
+    try {
+      const res = await Promise.race([
+        f.placeOrder(f.sel.id, momo.replace(/\D/g, '')),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), PAY_TIMEOUT_MS),
+        ),
+      ])
+      if (res) {
+        navigate(`/app/orders/${res.orderId}`, {
+          state: {
+            listingId: f.sel.id,
+            qty: f.orderQty,
+            status: 'pending_payment',
+            placed: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          },
+        })
+      } else {
+        setPayError('The payment could not be started. You have not been charged — check the details and try again.')
+      }
+    } catch (err) {
+      setPayError(
+        (err as Error).message === 'timeout'
+          ? 'The payment request timed out. Check your MoMo app for a pending prompt before trying again, so you are not charged twice.'
+          : 'Something went wrong starting the payment. You have not been charged — please try again.',
+      )
+    } finally {
+      submitting.current = false
     }
   }
 
@@ -34,7 +91,7 @@ export function Checkout() {
       <div className="max-w-[980px] mx-auto px-[28px] pt-[36px] pb-[64px]">
         <h1 className="text-[28px] font-normal tracking-[-0.02em] mb-[28px]">Checkout</h1>
 
-        <div className="grid gap-[28px] items-start" style={{ gridTemplateColumns: '1fr 380px' }}>
+        <div className="grid gap-[28px] items-start md:grid-cols-[1fr_380px]">
 
           {/* Payment method */}
           <div>
@@ -64,15 +121,21 @@ export function Checkout() {
               ))}
             </div>
 
-            <div className="mb-[20px]">
-              <label className="block text-[13px] text-ink2 mb-[7px]">Mobile money number</label>
-              <input
-                value={momo}
-                onChange={(e) => setMomo(e.target.value)}
-                placeholder="024 123 4567"
-                className="w-full bg-surface border border-line rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary"
-              />
-            </div>
+            {isMomo && (
+              <div className="mb-[20px]">
+                <label htmlFor="fc-momo" className="block text-[13px] text-ink2 mb-[7px]">Mobile money number</label>
+                <input
+                  id="fc-momo"
+                  inputMode="tel"
+                  value={momo}
+                  onChange={(e) => { setMomo(e.target.value); if (fieldError) setFieldError('') }}
+                  placeholder="024 123 4567"
+                  aria-invalid={!!fieldError}
+                  className={`w-full bg-surface border rounded-[8px] px-[14px] py-[12px] text-[14px] text-ink font-[inherit] outline-none min-h-[44px] focus:border-primary ${fieldError ? 'border-error' : 'border-line'}`}
+                />
+                {fieldError && <div className="text-[13px] text-error mt-[8px] leading-[1.5]">{fieldError}</div>}
+              </div>
+            )}
 
             <div className="flex gap-[11px] bg-primary-dim rounded-[8px] p-[16px]">
               <svg
@@ -102,7 +165,7 @@ export function Checkout() {
             <div className="flex gap-[12px] items-center pb-[18px] border-b border-line mb-[18px]">
               <div className="w-[56px] h-[56px] flex-shrink-0 rounded-[8px] overflow-hidden bg-surface2">
                 {f.sel.photo && (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={f.sel.photo}
                     alt={f.sel.crop}
                     className="w-full h-full object-cover block"
@@ -131,6 +194,18 @@ export function Checkout() {
               <span className="text-[24px] text-ink">{f.totalStr}</span>
             </div>
 
+            {payError && (
+              <div className="flex flex-col gap-[10px] bg-error-dim border border-error rounded-[8px] p-[14px] mb-[16px]">
+                <span className="text-[13px] text-ink leading-[1.55]">{payError}</span>
+                <button
+                  onClick={() => void confirmAndPay()}
+                  className="self-start bg-transparent text-ink border border-line rounded-[6px] px-[14px] py-[8px] text-[13px] cursor-pointer font-[inherit] hover:border-ink3"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
             <button
               onClick={() => void confirmAndPay()}
               disabled={f.paying}
@@ -138,6 +213,13 @@ export function Checkout() {
             >
               Confirm &amp; Pay
             </button>
+            <div className="flex items-center justify-center gap-[6px] text-[12px] text-ink3 mt-[12px]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Held in escrow — the farmer is only paid after you confirm delivery
+            </div>
           </div>
         </div>
       </div>

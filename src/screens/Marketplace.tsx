@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useFarm } from '../lib/derive'
 import { Icon } from '../components/primitives'
 import { TopBar, ListingCard } from '../components/shared'
@@ -6,6 +6,7 @@ import { FarmScore } from '../components/FarmScore'
 
 export function Marketplace() {
   const f = useFarm()
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     if (f.apiEnabled && f.liveListings === null) {
@@ -22,17 +23,36 @@ export function Marketplace() {
     <div>
       <TopBar active="marketplace" showSearch />
 
-      <div className="grid max-w-[1440px] mx-auto" style={{ gridTemplateColumns: '260px 1fr' }}>
-        {/* Filter sidebar */}
-        <aside className="border-r border-line px-[24px] py-[28px] min-h-[calc(100vh-var(--toolbar-h)-64px)]">
+      <div className="grid max-w-[1440px] mx-auto lg:grid-cols-[260px_1fr]">
+        {/* Mobile drawer backdrop */}
+        {filtersOpen && (
+          <div className="fixed inset-0 z-[80] lg:hidden" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => setFiltersOpen(false)} />
+        )}
+        {/* Filter sidebar — static column on desktop, slide-in drawer on mobile */}
+        <aside
+          className={
+            filtersOpen
+              ? 'fixed left-0 top-0 bottom-0 z-[90] w-[280px] overflow-y-auto bg-bg border-r border-line px-[24px] py-[28px] lg:static lg:z-auto lg:w-auto lg:min-h-[calc(100vh-var(--toolbar-h)-64px)]'
+              : 'hidden lg:block border-r border-line px-[24px] py-[28px] lg:min-h-[calc(100vh-var(--toolbar-h)-64px)]'
+          }
+        >
           <div className="flex items-center justify-between mb-[24px]">
             <span className="text-[15px] text-ink">Filters</span>
-            <span
-              className="text-[12px] text-primary cursor-pointer"
-              onClick={f.resetFilters}
-            >
-              Reset
-            </span>
+            <div className="flex items-center gap-[14px]">
+              <button
+                className="text-[12px] text-primary cursor-pointer bg-transparent border-none font-[inherit] p-0"
+                onClick={f.resetFilters}
+              >
+                Reset
+              </button>
+              <button
+                aria-label="Close filters"
+                onClick={() => setFiltersOpen(false)}
+                className="lg:hidden flex h-[32px] w-[32px] items-center justify-center rounded-lg border border-line bg-transparent text-ink2 cursor-pointer"
+              >
+                <Icon paths={['M18 6 6 18', 'm6 6 12 12']} size={15} />
+              </button>
+            </div>
           </div>
 
           {/* Crop checkboxes */}
@@ -126,14 +146,22 @@ export function Marketplace() {
         {/* Listing area */}
         <div className="px-[28px] pt-[24px] pb-[64px]">
           {/* Header row */}
-          <div className="flex items-center justify-between mb-[22px]">
+          <div className="flex flex-wrap items-center justify-between gap-[12px] mb-[22px]">
             <div>
               <h1 className="text-[22px] font-normal tracking-[-0.02em] m-0 mb-[3px]">The market</h1>
               <span className="text-[13px] text-ink2">
-                {f.mktCount} on sale now · across 16 regions
+                {f.mktCount} on sale now · {f.mktRegionCount} {f.mktRegionCount === 1 ? 'region' : 'regions'}
               </span>
             </div>
-            <div className="flex items-center gap-[14px]">
+            <div className="flex flex-wrap items-center gap-[14px]">
+              {/* Mobile: open the filter drawer */}
+              <button
+                onClick={() => setFiltersOpen(true)}
+                className="lg:hidden inline-flex items-center gap-[7px] bg-surface border border-line rounded-[8px] px-[13px] text-[13px] text-ink cursor-pointer font-[inherit] min-h-[44px]"
+              >
+                <Icon paths={['M22 3H2l8 9.46V19l4 2v-8.54L22 3z']} size={14} />
+                Filters
+              </button>
               {/* Sort select */}
               <div className="relative flex items-center bg-surface border border-line rounded-[8px] px-[10px]">
                 <span className="text-[13px] text-ink2">Sort:</span>
@@ -207,8 +235,24 @@ export function Marketplace() {
             </div>
           </div>
 
+          {/* Empty state — filters matched nothing */}
+          {f.mktCount === 0 && (
+            <div className="flex flex-col items-center gap-[12px] bg-surface border border-line rounded-[12px] p-[36px] text-center">
+              <div className="text-[16px] text-ink">Nothing matches those filters</div>
+              <div className="text-[13px] text-ink2 max-w-[320px]">
+                Try widening the price range, unticking a crop, or clearing everything to see the whole market.
+              </div>
+              <button
+                onClick={f.resetFilters}
+                className="bg-primary text-primary-ink border-none rounded-[8px] px-[20px] py-[12px] text-[14px] cursor-pointer font-[inherit] min-h-[44px] hover:opacity-[0.88]"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
+
           {/* Map view */}
-          {f.mapActive && (
+          {f.mktCount > 0 && f.mapActive && (
             <div className="relative h-[560px] border border-line rounded-[12px] overflow-hidden bg-surface">
               <svg
                 width="100%"
@@ -274,14 +318,14 @@ export function Marketplace() {
 
               {/* Legend */}
               <div className="absolute top-[16px] left-[16px] bg-bg border border-line rounded-[8px] px-[14px] py-[10px] text-[12px] text-ink2">
-                8 listings · clustered by district
+                {f.mktCount} listings · clustered by district
               </div>
             </div>
           )}
 
           {/* Grid view */}
-          {f.gridActive && (
-            <div className="grid grid-cols-3 gap-[18px]">
+          {f.mktCount > 0 && f.gridActive && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-[18px]">
               {f.mktFiltered.map((l) => (
                 <ListingCard key={l.id} l={l} showHarvest />
               ))}
@@ -289,18 +333,27 @@ export function Marketplace() {
           )}
 
           {/* List view */}
-          {f.listActive && (
+          {f.mktCount > 0 && f.listActive && (
             <div className="flex flex-col gap-[12px]">
               {f.mktFiltered.map((l) => (
                 <div
                   key={l.id}
                   onClick={l.selectFn}
-                  className="cursor-pointer flex items-center gap-[18px] bg-surface border border-line rounded-[12px] p-[14px] transition-colors duration-150 hover:border-ink3"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${l.crop} listing from ${l.farmer}, ${l.priceStr} per kg`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      l.selectFn()
+                    }
+                  }}
+                  className="cursor-pointer flex flex-wrap items-center gap-[18px] bg-surface border border-line rounded-[12px] p-[14px] transition-colors duration-150 hover:border-ink3 focus-visible:border-primary outline-none"
                 >
                   {/* Image thumb */}
                   <div className="w-[120px] h-[72px] flex-shrink-0 rounded-[8px] overflow-hidden bg-surface2 relative">
                     {l.photo && (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={l.photo}
                         alt={l.crop}
                         className="w-full h-full object-cover block"

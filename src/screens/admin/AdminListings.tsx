@@ -30,7 +30,7 @@ export function AdminListings() {
             <div className="flex items-center gap-[10px]">
               <div className="bg-surface2 rounded-[6px] overflow-hidden flex-shrink-0" style={{ width: 34, height: 34 }}>
                 {l.photo && (
-                  <img src={l.photo} alt={l.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <img loading="lazy" decoding="async" src={l.photo} alt={l.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 )}
               </div>
               <span className="text-ink">{l.crop}</span>

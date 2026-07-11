@@ -4,7 +4,7 @@ import { useFarm } from '../lib/derive'
 import { StarIcon } from '../components/primitives'
 import { TopBar } from '../components/shared'
 import { api, apiEnabled } from '../lib/api'
-import { MOCK_ORDERS, fmtGHS } from '../lib/data'
+import { MOCK_ORDERS, fmtGHS, fmtQty } from '../lib/data'
 import { ORDERED_STEP_LABELS, nextStatus, orderStatusInfo, type OrderStatus } from '../lib/orderStatus'
 
 interface LiveOrder {
@@ -104,10 +104,25 @@ export function Tracking() {
           {placed && <span className="text-[13px] text-ink2">Placed {placed}</span>}
         </div>
         <h1 className="text-[26px] font-normal tracking-[-0.02em] m-0 mb-[8px]">
-          {crop} · {qty} kg from {farmer}
+          {crop} · {fmtQty(qty)} from {farmer}
         </h1>
-        <div className="text-[14px] text-ink2 mb-[36px]">
+        <div className="text-[14px] text-ink2 mb-[20px]">
           {district}{region ? `, ${region}` : ''} · Total {totalStr}
+        </div>
+
+        {/* Escrow status — when money is held vs released (SRS §2.2) */}
+        <div className="flex gap-[11px] bg-primary-dim rounded-[8px] p-[14px] mb-[24px]">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary flex-shrink-0 mt-[1px]">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <span className="text-[13px] text-ink leading-[1.55]">
+            {info.trackStep >= 4
+              ? `${totalStr} has been released from escrow and paid to ${farmer}.`
+              : status === 'disputed'
+                ? `${totalStr} stays safely in escrow while we resolve your dispute.`
+                : `${totalStr} is held safely in escrow. ${farmer} is only paid after you confirm delivery.`}
+          </span>
         </div>
 
         {/* stepper */}

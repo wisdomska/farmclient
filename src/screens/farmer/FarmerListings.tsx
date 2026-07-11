@@ -36,7 +36,7 @@ export function FarmerListings() {
         {shown.map((m) => (
           <div key={m.crop + m.qtyStr} className="flex items-center gap-[12px] bg-surface border border-line rounded-[10px] p-[14px]">
             <div style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-tertiary)' }}>
-              {m.photo && <img src={m.photo} alt={m.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+              {m.photo && <img loading="lazy" decoding="async" src={m.photo} alt={m.crop} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
             </div>
             <div className="flex-1">
               <div className="text-[14px] text-ink">{m.crop}</div>

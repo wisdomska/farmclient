@@ -28,7 +28,7 @@ function FarmerShell() {
   }, [state.role, state.token])
 
   return (
-    <div className="bg-surface flex items-center justify-center gap-[40px] p-[32px]" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
+    <div className="bg-surface flex flex-wrap items-center justify-center gap-[40px] p-[16px] sm:p-[32px]" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
       {/* Left intro text */}
       <div className="flex-shrink-0">
         <div className="text-[11px] tracking-[0.08em] uppercase text-ink3 mb-[6px]">Farmer app · on your phone</div>

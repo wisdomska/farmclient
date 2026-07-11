@@ -13,7 +13,7 @@ const NAV: { to: string; label: string }[] = [
 
 function AdminShell() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: 'calc(100vh - var(--toolbar-h))' }}>
+    <div className="grid md:grid-cols-[240px_1fr]" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
       {/* Sidebar */}
       <aside className="bg-surface border-r border-line flex flex-col px-[16px] py-[24px]">
         <div className="flex items-center gap-[9px] px-[8px] mb-[28px]">
@@ -32,7 +32,7 @@ function AdminShell() {
           <span className="text-[9px] tracking-[0.06em] uppercase text-ink3 border border-line rounded-[20px] px-[7px] py-[2px]">Admin</span>
         </div>
 
-        <div className="flex flex-col gap-[2px]">
+        <div className="flex flex-row flex-wrap md:flex-col gap-[2px]">
           {NAV.map((n) => (
             <NavLink
               key={n.to}

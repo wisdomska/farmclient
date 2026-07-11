@@ -3,14 +3,16 @@ import { useStore } from '../store'
 import {
   CROPS_ALL,
   LISTINGS,
-  MOCK_ONGOING_COUNT,
   MOCK_ORDERS,
+  ONGOING_STATUSES,
   USSD_NODES,
   aiColors,
   aiLabel,
   chip,
   cropPhoto,
   fmtGHS,
+  fmtPct,
+  fmtQty,
   keypadSub,
 } from './data'
 import { statusChip } from './orderStatus'
@@ -35,7 +37,7 @@ export function useFarm() {
       ...l,
       priceStr: fmtGHS(l.price),
       distStr: l.district + ' · ' + l.distanceKm + ' km',
-      qtyStr: l.qty.toLocaleString('en-US') + ' kg',
+      qtyStr: fmtQty(l.qty),
       ratingStr: l.rating.toFixed(1),
       aiBg: ai.bg,
       aiFg: ai.fg,
@@ -72,7 +74,7 @@ export function useFarm() {
     crop,
     priceStr: fmtGHS(p),
     trend: t,
-    trendStr: (t > 0 ? '+' : '') + t.toFixed(1) + '%',
+    trendStr: fmtPct(t),
     color: t > 0 ? 'var(--success)' : t < 0 ? 'var(--error)' : 'var(--text-secondary)',
   }))
 
@@ -131,7 +133,7 @@ export function useFarm() {
       photo: cropPhoto(l.crop),
       farmer: l.farmer,
       district: l.district,
-      qtyStr: m.qty.toLocaleString('en-US') + ' kg',
+      qtyStr: fmtQty(m.qty),
       date: m.date,
       totalStr: fmtGHS(l.price * m.qty),
       bg: c.bg,
@@ -140,11 +142,11 @@ export function useFarm() {
       onClick: () => navigate(`/app/orders/${m.id}`),
     }
   }
-  const ordersOngoing = MOCK_ORDERS.slice(0, MOCK_ONGOING_COUNT).map(mkOrder)
-  const ordersPast = MOCK_ORDERS.slice(MOCK_ONGOING_COUNT).map(mkOrder)
+  const ordersOngoing = MOCK_ORDERS.filter((m) => ONGOING_STATUSES.includes(m.status)).map(mkOrder)
+  const ordersPast = MOCK_ORDERS.filter((m) => !ONGOING_STATUSES.includes(m.status)).map(mkOrder)
 
   // ── dashboard active orders (same mock source, same status derivation) ──
-  const orders = MOCK_ORDERS.slice(0, MOCK_ONGOING_COUNT).map(mkOrder)
+  const orders = ordersOngoing.slice(0, 3)
 
   // ── payment methods ──
   const payDefs: [string, string, string][] = [
@@ -353,6 +355,7 @@ export function useFarm() {
     mktFiltered,
     mktView: s.mktView,
     mktCount: mktFiltered.length,
+    mktRegionCount: new Set(mktFiltered.map((l) => l.region)).size,
     gridActive: s.mktView === 'grid',
     listActive: s.mktView === 'list',
     mapActive: s.mktView === 'map',
@@ -379,7 +382,7 @@ export function useFarm() {
     decQty: () => set({ orderQty: Math.max(50, s.orderQty - 50) }),
     priceChartData: [3.7, 3.8, 3.75, 3.9, 4.0, 4.05, 3.95, 4.1, 4.15, 4.2],
     similar: all.filter((l) => l.id !== sel.id).slice(0, 3),
-    trendStr: (sel.trend > 0 ? '+' : '') + sel.trend.toFixed(1) + '%',
+    trendStr: fmtPct(sel.trend),
     trendColor: sel.trend > 0 ? 'var(--success)' : sel.trend < 0 ? 'var(--error)' : 'var(--text-secondary)',
 
     // checkout
@@ -393,8 +396,10 @@ export function useFarm() {
     // listings pool (Tracking looks up its order's listing here)
     all,
 
-    // farmer app
+    // farmer app — escrow model: "available" is released money the farmer can
+    // withdraw now; "pending" is escrowed money for orders not yet confirmed.
     walletBalance: fmtGHS(12480),
+    walletPending: fmtGHS(780),
     txns,
     myListings,
     addCrops,
@@ -412,7 +417,6 @@ export function useFarm() {
     },
     withdrawMoney: () => showToast('Sent to your MoMo. Check your phone.'),
     applyAdvance: () => showToast('Loan request sent. We will text you.'),
-    aiSuggest: () => showToast('A fair price today is GHS 4.20 per kg.'),
 
     // ussd
     ussdTitle: USSD_NODES[s.ussdNode].title,
@@ -430,8 +434,10 @@ export function useFarm() {
     ordersRows,
     paymentsRows,
     adminListings: all,
-    sendBroadcast: () => showToast('Price update sent to 2.04M farmers by text'),
-    resolveDispute: () => showToast('Dispute marked as resolved'),
+    // Honest copy: the broadcast endpoint isn't wired to the Moolre SMS
+    // gateway from this console yet — never claim a send that didn't happen.
+    sendBroadcast: () => showToast('Broadcast queued for review — SMS delivery goes live with the Moolre gateway.'),
+    resolveDispute: () => showToast('Dispute resolution recorded.'),
     saveSettings: () => showToast('Settings saved'),
 
     // orders

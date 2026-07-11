@@ -45,7 +45,7 @@ export function Toolbar() {
           Dev
         </span>
       </div>
-      <div className="fcscroll flex flex-1 items-center gap-1 overflow-x-auto px-[2px]">
+      <div className="fcscroll flex flex-1 min-w-0 items-center gap-1 overflow-x-auto px-[2px]">
         {NAV_DEFS.map(([path, label]) => {
           const active = location.pathname === path
           return (
@@ -76,7 +76,7 @@ export function Toolbar() {
         <option value="admin">Admin</option>
         <option value="superadmin">Super admin</option>
       </select>
-      <LanguageToggle />
+      <span className="hidden sm:block"><LanguageToggle /></span>
       <button
         onClick={toggleTheme}
         aria-label="Toggle light and dark mode"

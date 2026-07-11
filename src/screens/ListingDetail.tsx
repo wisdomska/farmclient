@@ -15,13 +15,13 @@ export function ListingDetail() {
     <div>
       <TopBar showNav={false} back={{ label: 'Back to marketplace', onClick: f.goMarketplace }} />
 
-      <div className="max-w-[1200px] mx-auto px-[28px] pt-[32px] pb-[64px] grid gap-[32px]" style={{ gridTemplateColumns: '1fr 380px' }}>
+      <div className="max-w-[1200px] mx-auto px-[28px] pt-[32px] pb-[64px] grid gap-[32px] lg:grid-cols-[1fr_380px]">
         {/* LEFT COLUMN */}
         <div>
           {/* Main gallery image */}
           <div className="border border-line rounded-[12px] bg-surface2 flex items-center justify-center relative text-ink3 mb-[12px]" style={{ aspectRatio: '16/9' }}>
             {mainPhoto && (
-              <img src={mainPhoto} alt={f.sel.crop} className="absolute inset-0 w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={mainPhoto} alt={f.sel.crop} className="absolute inset-0 w-full h-full object-cover" />
             )}
             <span className="absolute top-[14px] left-[14px] text-[12px] bg-primary-dim text-primary px-[12px] py-[5px] rounded-full">
               {f.sel.crop}
@@ -37,7 +37,7 @@ export function ListingDetail() {
                 className={`aspect-square rounded-[8px] overflow-hidden border cursor-pointer ${thumb === i ? 'border-primary' : 'border-line'}`}
               >
                 {src && (
-                  <img src={src} alt={i % 2 === 0 ? f.sel.crop : 'Farm'} className="w-full h-full object-cover block" style={{ opacity: thumb === i ? 1 : 0.85 }} />
+                  <img loading="lazy" decoding="async" src={src} alt={i % 2 === 0 ? f.sel.crop : 'Farm'} className="w-full h-full object-cover block" style={{ opacity: thumb === i ? 1 : 0.85 }} />
                 )}
               </div>
             ))}
@@ -81,7 +81,7 @@ export function ListingDetail() {
             </div>
             <div className="flex items-end justify-between gap-[24px]">
               <div>
-                <div className="text-[12px] text-ink3 mb-[6px]">Current fair price</div>
+                <div className="text-[12px] text-ink3 mb-[6px]">This listing's price</div>
                 <div className="flex items-baseline gap-[6px]">
                   <span className="text-[32px] tracking-[-0.02em] text-ink">{f.sel.priceStr}</span>
                   <span className="text-[14px] text-ink2">/kg</span>
@@ -99,16 +99,25 @@ export function ListingDetail() {
 
           {/* Similar listings */}
           <h2 className="text-[18px] font-normal tracking-[-0.01em] m-0 mb-[16px] text-ink">Similar listings</h2>
-          <div className="grid grid-cols-3 gap-[14px]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[14px]">
             {f.similar.map((l) => (
               <div
                 key={l.id}
                 onClick={l.selectFn}
-                className="cursor-pointer bg-surface border border-line rounded-[8px] overflow-hidden transition-[border-color] duration-[150ms] ease-out hover:border-ink3"
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${l.crop} listing from ${l.farmer}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    l.selectFn()
+                  }
+                }}
+                className="cursor-pointer bg-surface border border-line rounded-[8px] overflow-hidden transition-[border-color] duration-[150ms] ease-out hover:border-ink3 focus-visible:border-primary outline-none"
               >
                 <div className="relative overflow-hidden bg-surface2" style={{ aspectRatio: '16/9' }}>
                   {l.photo && (
-                    <img src={l.photo} alt={l.crop} className="w-full h-full object-cover block" />
+                    <img loading="lazy" decoding="async" src={l.photo} alt={l.crop} className="w-full h-full object-cover block" />
                   )}
                   <span className="absolute top-[8px] left-[8px] text-[11px] bg-primary-dim text-primary px-[9px] py-[3px] rounded-full">
                     {l.crop}

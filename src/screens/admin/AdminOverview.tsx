@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useFarm } from '../../lib/derive'
 import { Icon, Spark } from '../../components/primitives'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
 
 export function AdminOverview() {
   const f = useFarm()
   const [month, setMonth] = useState('Jun 2026')
+  const [resolving, setResolving] = useState<string | null>(null)
 
   return (
     <div>
@@ -30,7 +32,7 @@ export function AdminOverview() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 16, marginBottom: 24 }}>
         {f.kpis.map((k) => (
           <div key={k.label} className="bg-surface border border-line rounded-[8px] p-[20px]">
             <div className="flex items-center justify-between mb-[16px] text-ink3">
@@ -43,7 +45,7 @@ export function AdminOverview() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr]" style={{ gap: 16, marginBottom: 16 }}>
         <div className="bg-surface border border-line rounded-[8px] p-[22px]">
           <div className="flex items-center justify-between mb-[18px]">
             <span className="text-[15px] text-ink">Daily settled volume</span>
@@ -84,7 +86,7 @@ export function AdminOverview() {
                 <span className="text-[13px] text-ink2"> vs {d.farmer} · {d.reason}</span>
               </div>
               <button
-                onClick={f.resolveDispute}
+                onClick={() => setResolving(d.id)}
                 className="bg-primary text-primary-ink border-none rounded-[6px] px-[14px] py-[7px] text-[12.5px] cursor-pointer font-[inherit]"
               >
                 Resolve
@@ -93,6 +95,18 @@ export function AdminOverview() {
           ))}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={resolving !== null}
+        title={`Resolve dispute ${resolving ?? ''}?`}
+        body="Resolving a dispute releases or refunds escrowed money and notifies both parties. This action is recorded in the audit log and cannot be undone."
+        confirmLabel="Resolve dispute"
+        onConfirm={() => {
+          setResolving(null)
+          f.resolveDispute()
+        }}
+        onCancel={() => setResolving(null)}
+      />
     </div>
   )
 }

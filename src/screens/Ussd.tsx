@@ -4,7 +4,7 @@ export function Ussd() {
   const f = useFarm()
 
   return (
-    <div className="flex items-center justify-center gap-[48px] px-[32px] py-[48px] bg-surface">
+    <div className="flex flex-wrap items-center justify-center gap-[48px] px-[16px] sm:px-[32px] py-[48px] bg-surface">
       {/* Left intro text column */}
       <div style={{ maxWidth: '300px' }}>
         <div className="text-[11px] tracking-[0.08em] uppercase text-ink3 mb-[8px]">
@@ -86,7 +86,7 @@ export function Ussd() {
               key={idx}
               onClick={k.onClick}
               aria-label={`Key ${k.d}`}
-              className="flex flex-col items-center justify-center gap-[1px] h-[42px] rounded-[8px] cursor-pointer transition-[background] duration-150 ease-out hover:bg-[#222]"
+              className="flex flex-col items-center justify-center gap-[1px] h-[44px] rounded-[8px] cursor-pointer transition-[background] duration-150 ease-out hover:bg-[#222]"
               style={{ background: '#161616', border: '1px solid #2a2a2a', color: '#e8e8e8', fontFamily: 'inherit' }}
             >
               <span style={{ fontSize: '16px', lineHeight: '1' }}>{k.d}</span>

@@ -23,7 +23,7 @@ export function Landing() {
             </div>
             <span className="text-[19px] font-normal tracking-[-0.02em]">FarmClient</span>
           </div>
-          <div className="flex items-center gap-[26px] text-[14px] text-ink2">
+          <div className="hidden md:flex items-center gap-[26px] text-[14px] text-ink2">
             <span onClick={f.goPublicMarket} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.marketplace')}</span>
             <span onClick={f.navHow} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.howItWorks')}</span>
             <span onClick={f.navFarmers} className="cursor-pointer transition-colors duration-150 hover:text-ink">{t('nav.forFarmers')}</span>
@@ -49,13 +49,13 @@ export function Landing() {
       </nav>
 
       {/* hero */}
-      <div className="max-w-[1280px] mx-auto px-[32px] pt-[60px] pb-[40px] grid gap-[56px] items-center" style={{ gridTemplateColumns: '1.05fr 0.95fr' }}>
+      <div className="max-w-[1280px] mx-auto px-[32px] pt-[60px] pb-[40px] grid gap-[56px] items-center md:grid-cols-[1.05fr_0.95fr]">
         <div>
           <div className="inline-flex items-center gap-[8px] px-[12px] py-[6px] border border-line rounded-[20px] text-[12px] tracking-[0.06em] uppercase text-ink2 mb-[28px]">
             <span className="w-[6px] h-[6px] rounded-full bg-primary" />
             {t('landing.eyebrow')}
           </div>
-          <h1 className="text-[60px] leading-[1.06] tracking-[-0.03em] font-normal m-0 mb-[22px] text-ink">
+          <h1 className="text-[38px] md:text-[60px] leading-[1.06] tracking-[-0.03em] font-normal m-0 mb-[22px] text-ink">
             {t('landing.h1')}
           </h1>
           <p className="text-[18px] leading-[1.6] text-ink2 m-0 mb-[36px] max-w-[480px]">
@@ -117,7 +117,7 @@ export function Landing() {
 
       {/* stats strip */}
       <div className="max-w-[1280px] mx-auto px-[32px] py-[30px]">
-        <div className="grid border border-line rounded-[12px] overflow-hidden" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="grid border border-line rounded-[12px] overflow-hidden grid-cols-2 md:grid-cols-4">
           {f.heroStats.map((s, idx) => (
             <div key={idx} className="px-[24px] py-[26px] border-r border-line last:border-r-0">
               <div className="text-[30px] tracking-[-0.02em] text-ink mb-[6px]">{s.value}</div>
@@ -133,7 +133,7 @@ export function Landing() {
           <div className="text-[12px] tracking-[0.08em] uppercase text-primary mb-[10px]">{t('nav.howItWorks')}</div>
           <h2 className="text-[34px] tracking-[-0.02em] font-normal m-0 text-ink">{t('how.heading')}</h2>
         </div>
-        <div className="grid gap-[20px]" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+        <div className="grid gap-[20px] grid-cols-1 md:grid-cols-3">
           {f.howItWorks.map((h) => (
             <div key={h.num} className="bg-surface border border-line rounded-[12px] p-[28px]">
               <div className="flex items-center justify-between mb-[24px]">
@@ -188,7 +188,7 @@ export function Landing() {
 
       {/* footer */}
       <div className="border-t border-line">
-        <div className="max-w-[1280px] mx-auto px-[32px] py-[44px] grid gap-[32px]" style={{ gridTemplateColumns: '1.4fr 1fr 1fr 1fr' }}>
+        <div className="max-w-[1280px] mx-auto px-[32px] py-[44px] grid gap-[32px] grid-cols-1 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* brand col */}
           <div>
             <div className="flex items-center gap-[10px] mb-[16px]">

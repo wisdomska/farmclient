@@ -68,7 +68,7 @@ export function Dashboard() {
         </h1>
 
         {/* quick stats */}
-        <div className="grid grid-cols-3 gap-4 mb-[36px]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-[36px]">
           {f.quickStats.map((q, i) => (
             <div
               key={i}
@@ -95,7 +95,7 @@ export function Dashboard() {
             </svg>
           </span>
         </div>
-        <div className="fcscroll grid grid-cols-4 gap-4 mb-[36px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-[36px]">
           {f.recommended.map((l) => (
             <ListingCard key={l.id} l={l} />
           ))}

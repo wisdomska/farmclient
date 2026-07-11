@@ -8,11 +8,15 @@ export function FarmerWallet() {
     <div style={{ padding: '14px 20px 28px' }}>
       <div className="text-[20px] tracking-[-0.01em] text-ink mb-[16px]">My money</div>
 
-      {/* Balance card */}
+      {/* Balance card — available (released) vs pending (still in escrow) */}
       <div className="bg-primary-dim border border-line rounded-[12px] p-[20px] mb-[16px]">
         <div className="text-[12px] text-ink2 mb-[6px]">Money you can take out</div>
-        <div className="text-[32px] tracking-[-0.02em] text-ink mb-[14px]">{f.walletBalance}</div>
-        <button onClick={f.withdrawMoney} className="bg-primary text-primary-ink border-none rounded-[8px] text-[14px] cursor-pointer font-[inherit]" style={{ padding: '11px 18px' }}>
+        <div className="text-[32px] tracking-[-0.02em] text-ink mb-[8px]">{f.walletBalance}</div>
+        <div className="flex items-center justify-between text-[12px] mb-[14px]">
+          <span className="text-ink2">Waiting for buyers to confirm</span>
+          <span className="text-ink">{f.walletPending}</span>
+        </div>
+        <button onClick={f.withdrawMoney} className="bg-primary text-primary-ink border-none rounded-[8px] text-[14px] cursor-pointer font-[inherit] min-h-[44px]" style={{ padding: '11px 18px' }}>
           Send to my MoMo
         </button>
       </div>

@@ -100,22 +100,24 @@ export function TopBar({
     </button>
   )
   const navItem = (label: string, key: 'dashboard' | 'marketplace' | 'orders', onClick: () => void) => (
-    <span
+    <button
       onClick={active === key ? undefined : onClick}
+      aria-current={active === key ? 'page' : undefined}
       className={
-        active === key
+        'bg-transparent border-none font-[inherit] text-[14px] p-0 min-h-[44px] ' +
+        (active === key
           ? 'cursor-pointer text-primary'
-          : 'cursor-pointer text-ink2 transition-colors hover:text-ink'
+          : 'cursor-pointer text-ink2 transition-colors hover:text-ink')
       }
     >
       {label}
-    </span>
+    </button>
   )
   return (
-    <div className="sticky top-[var(--toolbar-h)] z-50 flex h-16 items-center gap-5 border-b border-line bg-bg px-7">
+    <div className="sticky top-[var(--toolbar-h)] z-50 flex h-16 items-center gap-3 md:gap-5 border-b border-line bg-bg px-4 md:px-7">
       <div onClick={authed ? f.goDashboard : f.goHome} className="flex flex-shrink-0 cursor-pointer items-center gap-[9px]">
         <Logo size={17} box={28} radius={7} />
-        <span className="text-[17px] tracking-[-0.02em]">FarmClient</span>
+        <span className="text-[17px] tracking-[-0.02em] hidden sm:inline">FarmClient</span>
       </div>
 
       {back && (
@@ -129,7 +131,7 @@ export function TopBar({
       )}
 
       {showSearch && (
-        <div className="flex h-[42px] max-w-[440px] flex-1 items-center gap-[10px] rounded-lg border border-line bg-surface px-[14px]">
+        <div className="hidden md:flex h-[42px] max-w-[440px] flex-1 items-center gap-[10px] rounded-lg border border-line bg-surface px-[14px]">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
@@ -232,10 +234,19 @@ export function ListingCard({ l, showHarvest }: { l: DisplayListing; showHarvest
   return (
     <div
       onClick={l.selectFn}
-      className="cursor-pointer overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-ink3"
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${l.crop} listing from ${l.farmer}, ${l.priceStr} per kg`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          l.selectFn()
+        }
+      }}
+      className="cursor-pointer overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-ink3 focus-visible:border-primary outline-none"
     >
       <div className="relative flex aspect-video items-center justify-center bg-surface2 text-ink3">
-        <img src={l.photo} alt={l.crop} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={l.photo} alt={`${l.crop} from ${l.farmer} in ${l.district}`} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
         <span className="absolute left-[10px] top-[10px] rounded-full bg-primary-dim px-[10px] py-1 text-[11px] text-primary">
           {l.crop}
         </span>

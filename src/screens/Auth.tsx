@@ -62,9 +62,9 @@ export function Auth() {
   }
 
   return (
-    <div className="grid grid-cols-2" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
+    <div className="grid grid-cols-1 md:grid-cols-2" style={{ minHeight: 'calc(100vh - var(--toolbar-h))' }}>
       {/* brand panel */}
-      <div className="relative overflow-hidden border-r border-line p-[56px] flex flex-col justify-between text-white">
+      <div className="relative overflow-hidden border-r border-line p-[56px] hidden md:flex flex-col justify-between text-white">
         <img
           src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1100&q=72"
           alt="A farm field in Ghana"

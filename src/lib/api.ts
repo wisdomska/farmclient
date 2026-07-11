@@ -46,6 +46,16 @@ export function decodeJwtClaim(token: string, key: string): string | null {
   }
 }
 
+// ── session-expiry hook ────────────────────────────────────────────────────
+// The store registers a handler; when any authenticated request comes back
+// 401/403 the session is torn down centrally so route guards send the user to
+// /sign-in (preserving their destination) instead of leaving a broken flow.
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(fn: () => void): void {
+  onUnauthorized = fn
+}
+
 // ── generic fetch client ───────────────────────────────────────────────────
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -59,6 +69,11 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   })
 
   if (!res.ok) {
+    // An expired/invalid token on an authenticated call ends the session —
+    // except for /auth/ endpoints, where 401 means "wrong credentials".
+    if ((res.status === 401 || res.status === 403) && token && !path.startsWith('/v1/auth/')) {
+      onUnauthorized?.()
+    }
     let message = `Request failed: ${res.status}`
     try {
       const json = await res.json()
@@ -151,6 +166,14 @@ export const api = {
   /** Re-verify the stored JWT and get a fresh one (boot-time session rehydration). */
   refresh() {
     return request<{ token: string }>('POST', '/v1/auth/refresh')
+  },
+
+  /** Live AI fair-price for a crop (backend proxies the AI service, falls back to rolling DB average). */
+  fairPrice(crop: string) {
+    return request<{ price?: number; pricePerKg?: number; source?: string }>(
+      'GET',
+      `/v1/prices?crop=${encodeURIComponent(crop)}`,
+    )
   },
 
   /** The authenticated farmer's own live FarmScore breakdown. */
